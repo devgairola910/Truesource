@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f6f0;
+  --foreground: #0f1720;
+  --surface-1: #eef2ea;
+  --surface-2: #ffffff;
+  --surface-3: #dce4d5;
+  --text-strong: #0f1720;
+  --text-muted: #3f4b58;
+  --text-soft: #657384;
+  --stroke: #cbd5c5;
+  --brand: #0e8f5b;
+  --brand-ink: #073126;
+  --warning: #c96f1d;
+  --danger: #c0394b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-ibm-plex-mono);
+  --font-heading: var(--font-space-grotesk);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-space-grotesk), "Avenir Next", sans-serif;
+  line-height: 1.45;
+  background:
+    radial-gradient(circle at 8% 10%, #d8e7d3 0%, transparent 32%),
+    radial-gradient(circle at 94% 18%, #d9e4f0 0%, transparent 33%),
+    linear-gradient(180deg, #f4f6f0 0%, #e8eee4 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  color: #03130d;
+  background: #a5dfc7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #091015;
+    --foreground: #d9e3ea;
+    --surface-1: #111c24;
+    --surface-2: #162431;
+    --surface-3: #203241;
+    --text-strong: #ecf3f9;
+    --text-muted: #abc0d0;
+    --text-soft: #8ea4b6;
+    --stroke: #2d4150;
+    --brand: #27d08f;
+    --brand-ink: #042015;
+    --warning: #df913e;
+    --danger: #e56b7c;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background:
+      radial-gradient(circle at 11% 12%, rgba(61, 109, 86, 0.23) 0%, transparent 36%),
+      radial-gradient(circle at 95% 16%, rgba(48, 91, 129, 0.22) 0%, transparent 34%),
+      linear-gradient(180deg, #071118 0%, #0c1c26 100%);
+  }
 }
