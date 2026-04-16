@@ -1,8 +1,9 @@
 import { Chip } from "@/components/ui/chip";
 import { AssetTable } from "@/components/registry/asset-table";
+import { ReviewWorkspace } from "@/components/review/review-workspace";
 import { CandidateFeed } from "@/components/scanning/candidate-feed";
 import { SectionCard } from "@/components/ui/section-card";
-import { assets, candidates } from "@/lib/mock-data";
+import { alerts, assets, candidates } from "@/lib/mock-data";
 
 const navItems = ["Registry", "Scanning", "Alerts", "Review", "Analytics"];
 
@@ -51,6 +52,15 @@ export default function Home() {
         >
           <CandidateFeed items={candidates} />
         </SectionCard>
+
+        <div className="lg:col-span-2">
+          <SectionCard
+            title="Reviewer Workflow"
+            description="Inspect incident evidence, adjust confidence, and decide actions"
+          >
+            <ReviewWorkspace initialAlerts={alerts} />
+          </SectionCard>
+        </div>
       </main>
     </div>
   );
