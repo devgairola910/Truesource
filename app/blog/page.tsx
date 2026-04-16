@@ -1,36 +1,6 @@
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/section-card";
-
-const posts = [
-  {
-    title: "Why Explainable Alerts Reduce Reviewer Fatigue",
-    summary:
-      "A practical look at how confidence breakdowns and source context help analysts make faster, more consistent decisions without sacrificing quality.",
-    date: "April 10, 2026",
-    readTime: "6 min read",
-  },
-  {
-    title: "Designing Staged Detection Pipelines for Cost Control",
-    summary:
-      "How to balance recall and spend by combining low-cost prefilters with selective deep similarity matching in cloud-native workflows.",
-    date: "March 28, 2026",
-    readTime: "8 min read",
-  },
-  {
-    title: "Handling Cropped and Re-Encoded Media in Real-World Feeds",
-    summary:
-      "Common transformation patterns and the signal combinations that maintain reliability when adversarial edits degrade single-method checks.",
-    date: "March 16, 2026",
-    readTime: "7 min read",
-  },
-  {
-    title: "Building Whitelist Governance Without Losing Visibility",
-    summary:
-      "A framework for authorized domain suppression that cuts alert noise while preserving oversight and measurable accountability.",
-    date: "February 24, 2026",
-    readTime: "5 min read",
-  },
-];
+import { blogPosts } from "@/lib/blog-posts";
 
 export default function BlogPage() {
   return (
@@ -50,17 +20,20 @@ export default function BlogPage() {
       </section>
 
       <section className="space-y-4">
-        {posts.map((post) => (
+        {blogPosts.map((post) => (
           <SectionCard
-            key={post.title}
+            key={post.slug}
             className="reveal-up"
             title={post.title}
             description={`${post.date}  |  ${post.readTime}`}
           >
             <p className="text-sm leading-7 text-[var(--text-muted)]">{post.summary}</p>
-            <p className="mt-3 text-sm font-semibold text-[var(--text-strong)]">
-              Full article coming soon.
-            </p>
+            <Link
+              href={`/blog/${post.slug}`}
+              className="mt-3 inline-flex text-sm font-semibold text-[var(--text-strong)] underline"
+            >
+              Read full article
+            </Link>
           </SectionCard>
         ))}
       </section>

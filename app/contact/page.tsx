@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContactForm } from "@/components/contact/contact-form";
 import { SectionCard } from "@/components/ui/section-card";
 
 export default function ContactPage() {
@@ -24,48 +25,7 @@ export default function ContactPage() {
           title="Send a Message"
           description="Share your goals and current challenges"
         >
-          <form className="space-y-3" aria-label="Contact form">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-sm text-[var(--text-muted)]">
-                Name
-                <input
-                  type="text"
-                  className="w-full rounded-lg border border-[var(--stroke)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-strong)] outline-none focus:border-[var(--brand)]"
-                  placeholder="Your full name"
-                />
-              </label>
-              <label className="space-y-1 text-sm text-[var(--text-muted)]">
-                Work Email
-                <input
-                  type="email"
-                  className="w-full rounded-lg border border-[var(--stroke)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-strong)] outline-none focus:border-[var(--brand)]"
-                  placeholder="name@company.com"
-                />
-              </label>
-            </div>
-            <label className="space-y-1 text-sm text-[var(--text-muted)]">
-              Company
-              <input
-                type="text"
-                className="w-full rounded-lg border border-[var(--stroke)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-strong)] outline-none focus:border-[var(--brand)]"
-                placeholder="Organization name"
-              />
-            </label>
-            <label className="space-y-1 text-sm text-[var(--text-muted)]">
-              Message
-              <textarea
-                rows={5}
-                className="w-full rounded-lg border border-[var(--stroke)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-strong)] outline-none focus:border-[var(--brand)]"
-                placeholder="Tell us about your content protection goals, channels, and review process."
-              />
-            </label>
-            <button
-              type="button"
-              className="rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-ink)] transition hover:opacity-90"
-            >
-              Send Inquiry
-            </button>
-          </form>
+          <ContactForm />
         </SectionCard>
 
         <SectionCard
