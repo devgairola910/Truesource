@@ -1,96 +1,121 @@
-import { Chip } from "@/components/ui/chip";
-import { KpiGrid } from "@/components/analytics/kpi-grid";
-import { WhitelistManager } from "@/components/governance/whitelist-manager";
-import { AssetTable } from "@/components/registry/asset-table";
-import { ReviewWorkspace } from "@/components/review/review-workspace";
-import { CandidateFeed } from "@/components/scanning/candidate-feed";
+import Link from "next/link";
 import { SectionCard } from "@/components/ui/section-card";
-import {
-  alerts,
-  assets,
-  candidates,
-  kpis,
-  whitelistDomains,
-} from "@/lib/mock-data";
 
-const navItems = ["Registry", "Scanning", "Alerts", "Review", "Analytics"];
+const valuePoints = [
+  {
+    title: "Signal Layering",
+    description:
+      "We combine perceptual matching, embeddings, and contextual metadata so decisions are resilient when any single signal weakens.",
+  },
+  {
+    title: "Reviewer Trust",
+    description:
+      "Every incident is explained with transparent evidence, confidence ranges, and source attribution to support fast, defensible triage.",
+  },
+  {
+    title: "Scalable Scope",
+    description:
+      "A staged pipeline controls cloud cost by filtering cheaply first and spending deep analysis only where risk is meaningful.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 py-5 md:px-8 md:py-8">
-      <header className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] px-5 py-4 shadow-[0_12px_40px_rgba(5,27,50,0.12)] md:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <p className="text-xs font-mono uppercase tracking-[0.22em] text-[var(--text-soft)]">
-              TrueSource
-            </p>
-            <h1 className="font-heading text-2xl font-bold text-[var(--text-strong)] md:text-3xl">
-              Content Integrity Console
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Chip label="MVP Build" tone="success" />
-            <Chip label="Limited Sources" />
-          </div>
+    <>
+      <section className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 shadow-[0_12px_40px_rgba(5,27,50,0.1)] md:p-8">
+        <p className="text-xs font-mono uppercase tracking-[0.22em] text-[var(--text-soft)]">
+          Home
+        </p>
+        <h2 className="mt-2 max-w-3xl font-heading text-3xl font-bold leading-tight text-[var(--text-strong)] md:text-5xl">
+          Protect your official media with fast detection and explainable evidence.
+        </h2>
+        <p className="mt-4 max-w-2xl text-base text-[var(--text-muted)] md:text-lg">
+          TrueSource helps rights teams register official assets, monitor public channels,
+          review suspicious reuse, and act with confidence. Our product is designed for
+          practical execution, not vague promises, so teams can move from discovery to
+          decision without workflow friction.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/services"
+            className="rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-ink)] transition hover:opacity-90"
+          >
+            Explore Services
+          </Link>
+          <Link
+            href="/contact"
+            className="rounded-lg border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-2.5 text-sm font-semibold text-[var(--text-strong)] transition hover:bg-[var(--surface-3)]"
+          >
+            Contact Our Team
+          </Link>
         </div>
-        <nav className="mt-4 flex flex-wrap gap-2">
-          {navItems.map((item) => (
-            <button
-              key={item}
-              className="rounded-full border border-[var(--stroke)] bg-[var(--surface-1)] px-3 py-1.5 text-sm font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-3)]"
-              type="button"
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-      </header>
+      </section>
 
-      <SectionCard
-        className="reveal-up"
-        title="MVP Health"
-        description="Live scorecard against launch targets"
-      >
-        <KpiGrid items={kpis} />
-      </SectionCard>
+      <section className="grid gap-5 md:grid-cols-3">
+        {valuePoints.map((point) => (
+          <SectionCard
+            key={point.title}
+            className="reveal-up"
+            title={point.title}
+            description="Why this matters"
+          >
+            <p className="text-sm leading-7 text-[var(--text-muted)]">{point.description}</p>
+          </SectionCard>
+        ))}
+      </section>
 
-      <main className="grid flex-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <section className="grid gap-5 lg:grid-cols-2">
         <SectionCard
           className="reveal-up"
-          title="Asset Registry"
-          description="Canonical source of official media and ownership metadata"
+          title="What You Can Do With TrueSource"
+          description="Core outcomes teams expect in the first release"
         >
-          <AssetTable rows={assets} />
+          <ul className="space-y-2 text-sm leading-7 text-[var(--text-muted)]">
+            <li>Upload and organize official images and videos as a source of truth.</li>
+            <li>Monitor selected public channels for suspicious media reuse patterns.</li>
+            <li>Review alerts with clear confidence breakdown and incident context.</li>
+            <li>Whitelist authorized domains to reduce noise and improve precision.</li>
+            <li>Track operational KPIs like triage speed and false positive rate.</li>
+          </ul>
         </SectionCard>
 
         <SectionCard
           className="reveal-up"
-          title="Web Scanning Feed"
-          description="Latest candidate pages discovered from monitored public sources"
+          title="Start Here"
+          description="Suggested path through the site"
         >
-          <CandidateFeed items={candidates} />
+          <ol className="space-y-3 text-sm leading-7 text-[var(--text-muted)]">
+            <li>
+              Learn who we are and how we approach detection in the
+              <Link href="/about" className="mx-1 font-semibold text-[var(--text-strong)] underline">
+                About page
+              </Link>
+              .
+            </li>
+            <li>
+              Review capabilities and implementation scope in
+              <Link href="/services" className="mx-1 font-semibold text-[var(--text-strong)] underline">
+                Services
+              </Link>
+              .
+            </li>
+            <li>
+              Read practical insights from our team in the
+              <Link href="/blog" className="mx-1 font-semibold text-[var(--text-strong)] underline">
+                Blog
+              </Link>
+              .
+            </li>
+            <li>
+              Reach out for onboarding, pilots, or demos through
+              <Link href="/contact" className="mx-1 font-semibold text-[var(--text-strong)] underline">
+                Contact
+              </Link>
+              .
+            </li>
+          </ol>
         </SectionCard>
-
-        <div className="lg:col-span-2">
-          <SectionCard
-            className="reveal-up"
-            title="Reviewer Workflow"
-            description="Inspect incident evidence, adjust confidence, and decide actions"
-          >
-            <ReviewWorkspace initialAlerts={alerts} />
-          </SectionCard>
-        </div>
-
-        <div className="lg:col-span-2">
-          <SectionCard
-            className="reveal-up"
-            title="Domain Whitelist"
-            description="Suppress authorized reuse and improve queue precision over time"
-          >
-            <WhitelistManager initialDomains={whitelistDomains} />
-          </SectionCard>
-        </div>
-      </main>
-    </div>
+      </section>
+    </>
   );
 }
