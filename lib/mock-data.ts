@@ -41,6 +41,20 @@ export type AlertRecord = {
   recommendedAction: string;
 };
 
+export type KpiRecord = {
+  id: string;
+  label: string;
+  value: string;
+  target: string;
+  trend: "up" | "down" | "neutral";
+};
+
+export type WhitelistDomain = {
+  domain: string;
+  owner: string;
+  reason: string;
+};
+
 export const assets: AssetRecord[] = [
   {
     id: "AST-1002",
@@ -155,5 +169,54 @@ export const alerts: AlertRecord[] = [
       { label: "Logo consistency", score: 0.67 },
       { label: "Watermark verification", score: 0.32 },
     ],
+  },
+];
+
+export const kpis: KpiRecord[] = [
+  {
+    id: "kpi-precision",
+    label: "Seeded Test Precision",
+    value: "92.4%",
+    target: "> 90%",
+    trend: "up",
+  },
+  {
+    id: "kpi-false-positive",
+    label: "False Positive Rate",
+    value: "7.1%",
+    target: "< 10%",
+    trend: "up",
+  },
+  {
+    id: "kpi-latency",
+    label: "Median Triage Time",
+    value: "1m 31s",
+    target: "< 2m",
+    trend: "up",
+  },
+  {
+    id: "kpi-throughput",
+    label: "Daily Discovery Throughput",
+    value: "1.04M pages",
+    target: "> 1M/day",
+    trend: "up",
+  },
+];
+
+export const whitelistDomains: WhitelistDomain[] = [
+  {
+    domain: "partner-broadcast.tv",
+    owner: "Premier Broadcast Group",
+    reason: "Contracted highlights distribution",
+  },
+  {
+    domain: "official-club-app.io",
+    owner: "Apex Sports Media",
+    reason: "Owned channel for campaign assets",
+  },
+  {
+    domain: "sponsor-content.net",
+    owner: "Northstar Sponsors",
+    reason: "Approved sponsor co-marketing",
   },
 ];

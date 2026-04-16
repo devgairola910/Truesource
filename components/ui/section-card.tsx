@@ -3,6 +3,7 @@ type SectionCardProps = {
   description: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
+  className?: string;
 };
 
 export function SectionCard({
@@ -10,9 +11,12 @@ export function SectionCard({
   description,
   actions,
   children,
+  className,
 }: SectionCardProps) {
   return (
-    <section className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 shadow-[0_12px_40px_rgba(5,27,50,0.09)]">
+    <section
+      className={`rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 shadow-[0_12px_40px_rgba(5,27,50,0.09)] ${className ?? ""}`}
+    >
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h2 className="font-heading text-xl font-semibold text-[var(--text-strong)]">

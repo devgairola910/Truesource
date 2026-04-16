@@ -1,9 +1,17 @@
 import { Chip } from "@/components/ui/chip";
+import { KpiGrid } from "@/components/analytics/kpi-grid";
+import { WhitelistManager } from "@/components/governance/whitelist-manager";
 import { AssetTable } from "@/components/registry/asset-table";
 import { ReviewWorkspace } from "@/components/review/review-workspace";
 import { CandidateFeed } from "@/components/scanning/candidate-feed";
 import { SectionCard } from "@/components/ui/section-card";
-import { alerts, assets, candidates } from "@/lib/mock-data";
+import {
+  alerts,
+  assets,
+  candidates,
+  kpis,
+  whitelistDomains,
+} from "@/lib/mock-data";
 
 const navItems = ["Registry", "Scanning", "Alerts", "Review", "Analytics"];
 
@@ -38,8 +46,17 @@ export default function Home() {
         </nav>
       </header>
 
+      <SectionCard
+        className="reveal-up"
+        title="MVP Health"
+        description="Live scorecard against launch targets"
+      >
+        <KpiGrid items={kpis} />
+      </SectionCard>
+
       <main className="grid flex-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
         <SectionCard
+          className="reveal-up"
           title="Asset Registry"
           description="Canonical source of official media and ownership metadata"
         >
@@ -47,6 +64,7 @@ export default function Home() {
         </SectionCard>
 
         <SectionCard
+          className="reveal-up"
           title="Web Scanning Feed"
           description="Latest candidate pages discovered from monitored public sources"
         >
@@ -55,10 +73,21 @@ export default function Home() {
 
         <div className="lg:col-span-2">
           <SectionCard
+            className="reveal-up"
             title="Reviewer Workflow"
             description="Inspect incident evidence, adjust confidence, and decide actions"
           >
             <ReviewWorkspace initialAlerts={alerts} />
+          </SectionCard>
+        </div>
+
+        <div className="lg:col-span-2">
+          <SectionCard
+            className="reveal-up"
+            title="Domain Whitelist"
+            description="Suppress authorized reuse and improve queue precision over time"
+          >
+            <WhitelistManager initialDomains={whitelistDomains} />
           </SectionCard>
         </div>
       </main>
