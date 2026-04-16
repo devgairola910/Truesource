@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LastVisitedTracker } from "@/components/auth/last-visited-tracker";
 import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
@@ -32,6 +33,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <LastVisitedTracker />
         <SiteHeader />
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-5 md:px-8 md:py-8">
           {children}

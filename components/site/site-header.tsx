@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthActions } from "@/components/auth/auth-actions";
 import { Chip } from "@/components/ui/chip";
 import { NavLinks } from "@/components/site/nav-links";
 
@@ -14,9 +15,10 @@ export function SiteHeader() {
             Content Integrity Platform
           </h1>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Chip label="Public Demo" tone="success" />
           <Chip label="MVP" />
+          <AuthActions />
         </div>
       </div>
       <div className="mt-4">
