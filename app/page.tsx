@@ -1,5 +1,8 @@
 import { Chip } from "@/components/ui/chip";
+import { AssetTable } from "@/components/registry/asset-table";
+import { CandidateFeed } from "@/components/scanning/candidate-feed";
 import { SectionCard } from "@/components/ui/section-card";
+import { assets, candidates } from "@/lib/mock-data";
 
 const navItems = ["Registry", "Scanning", "Alerts", "Review", "Analytics"];
 
@@ -39,18 +42,14 @@ export default function Home() {
           title="Asset Registry"
           description="Canonical source of official media and ownership metadata"
         >
-          <div className="flex min-h-56 items-center justify-center rounded-xl border border-dashed border-[var(--stroke)] bg-[var(--surface-1)] text-sm text-[var(--text-soft)]">
-            Registry table will be added in Step 2.
-          </div>
+          <AssetTable rows={assets} />
         </SectionCard>
 
         <SectionCard
-          title="Alert Queue"
-          description="Suspicious incidents prioritized for reviewer action"
+          title="Web Scanning Feed"
+          description="Latest candidate pages discovered from monitored public sources"
         >
-          <div className="flex min-h-56 items-center justify-center rounded-xl border border-dashed border-[var(--stroke)] bg-[var(--surface-1)] text-sm text-[var(--text-soft)]">
-            Alert cards and reviewer controls arrive in Step 3.
-          </div>
+          <CandidateFeed items={candidates} />
         </SectionCard>
       </main>
     </div>
