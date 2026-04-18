@@ -13,19 +13,30 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
+let cachedRaw: string | null = null;
+let cachedSession: AuthSession | null = null;
+
 export function getSession() {
   if (!isBrowser()) {
     return null;
   }
 
   const raw = window.localStorage.getItem(SESSION_KEY);
+  if (raw === cachedRaw) {
+    return cachedSession;
+  }
+  
+  cachedRaw = raw;
   if (!raw) {
+    cachedSession = null;
     return null;
   }
 
   try {
-    return JSON.parse(raw) as AuthSession;
+    cachedSession = JSON.parse(raw) as AuthSession;
+    return cachedSession;
   } catch {
+    cachedSession = null;
     return null;
   }
 }

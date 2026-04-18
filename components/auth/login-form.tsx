@@ -4,15 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getLastVisitedPath, getSession, setSession } from "@/lib/auth-client";
-
-type LoginPayload = {
-  user?: {
-    name: string;
-    email: string;
-    company: string;
-  };
-  message?: string;
-};
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 type LoginFormProps = {
   requestedRedirect: string | null;
@@ -37,24 +30,15 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
     setFeedback("");
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const payload = (await response.json()) as LoginPayload;
-
-      if (!response.ok || !payload.user) {
-        setStatus("error");
-        setFeedback(payload.message ?? "Unable to log in with these credentials.");
-        return;
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      let name = userCredential.user.displayName || "";
+      let company = "";
 
       setSession({
-        ...payload.user,
+        name,
+        email: userCredential.user.email || email,
+        company,
         createdAt: new Date().toISOString(),
       });
 
@@ -63,9 +47,9 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
 
       router.push(destination);
       router.refresh();
-    } catch {
+    } catch (e: any) {
       setStatus("error");
-      setFeedback("Network error. Please try again.");
+      setFeedback(e.message ?? "Unable to log in with these credentials.");
     }
   }
 

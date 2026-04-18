@@ -4,15 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, setSession } from "@/lib/auth-client";
-
-type SignupPayload = {
-  user?: {
-    name: string;
-    email: string;
-    company: string;
-  };
-  message?: string;
-};
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export function SignupForm() {
   const router = useRouter();
@@ -35,32 +28,22 @@ export function SignupForm() {
     setFeedback("");
 
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, company, password }),
-      });
-
-      const payload = (await response.json()) as SignupPayload;
-
-      if (!response.ok || !payload.user) {
-        setStatus("error");
-        setFeedback(payload.message ?? "Could not create account.");
-        return;
-      }
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      await updateProfile(userCredential.user, { displayName: name });
 
       setSession({
-        ...payload.user,
+        name,
+        email,
+        company,
         createdAt: new Date().toISOString(),
       });
 
       router.push("/welcome");
       router.refresh();
-    } catch {
+    } catch (e: any) {
       setStatus("error");
-      setFeedback("Network error. Please try again.");
+      setFeedback(e.message ?? "Could not create account.");
     }
   }
 
