@@ -15,18 +15,20 @@ export function SectionCard({
 }: SectionCardProps) {
   return (
     <section
-      className={`rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 shadow-[0_12px_40px_rgba(5,27,50,0.09)] ${className ?? ""}`}
+      className={`modern-card rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 md:p-8 ${className ?? ""}`}
     >
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="font-heading text-xl font-semibold text-[var(--text-strong)]">
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-[var(--stroke)] pb-4">
+        <div className="space-y-1.5">
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-[var(--text-strong)]">
             {title}
           </h2>
-          <p className="text-sm text-[var(--text-muted)]">{description}</p>
+          <p className="text-sm font-medium text-[var(--text-soft)]">{description}</p>
         </div>
         {actions ? <div>{actions}</div> : null}
       </header>
-      {children}
+      <div className="text-[var(--text-muted)]">
+        {children}
+      </div>
     </section>
   );
 }
