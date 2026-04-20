@@ -10,7 +10,20 @@ export function AuthActions() {
   const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const isLoggedIn = Boolean(session);
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (session?.sessionToken) {
+      try {
+        await fetch("/api/auth/session", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${session.sessionToken}`,
+          },
+        });
+      } catch {
+        // Clear client session even if the network call fails.
+      }
+    }
+
     clearSession();
     router.push("/");
     router.refresh();

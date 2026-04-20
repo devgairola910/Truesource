@@ -3,6 +3,7 @@ export type AuthSession = {
   email: string;
   company: string;
   createdAt: string;
+  sessionToken: string;
 };
 
 const SESSION_KEY = "truesource.auth.session";

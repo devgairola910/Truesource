@@ -4,8 +4,16 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, setSession } from "@/lib/auth-client";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+
+type SignupResponse = {
+  message?: string;
+  sessionToken?: string;
+  user?: {
+    name: string;
+    email: string;
+    company: string;
+  };
+};
 
 export function SignupForm() {
   const router = useRouter();
@@ -28,22 +36,35 @@ export function SignupForm() {
     setFeedback("");
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      await updateProfile(userCredential.user, { displayName: name });
-
-      setSession({
-        name,
-        email,
-        company,
-        createdAt: new Date().toISOString(),
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, company, password }),
       });
 
-      router.push("/dashboard");
+      const payload = (await response.json()) as SignupResponse;
+
+      if (!response.ok || !payload.user || !payload.sessionToken) {
+        setStatus("error");
+        setFeedback(payload.message ?? "Could not create account.");
+        return;
+      }
+
+      setSession({
+        name: payload.user.name,
+        email: payload.user.email,
+        company: payload.user.company,
+        createdAt: new Date().toISOString(),
+        sessionToken: payload.sessionToken,
+      });
+
+      router.push("/welcome");
       router.refresh();
-    } catch (e: any) {
+    } catch {
       setStatus("error");
-      setFeedback(e.message ?? "Could not create account.");
+      setFeedback("Network error. Please try again.");
     }
   }
 

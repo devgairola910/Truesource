@@ -4,8 +4,16 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getLastVisitedPath, getSession, setSession } from "@/lib/auth-client";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+
+type LoginResponse = {
+  message?: string;
+  sessionToken?: string;
+  user?: {
+    name: string;
+    email: string;
+    company: string;
+  };
+};
 
 type LoginFormProps = {
   requestedRedirect: string | null;
@@ -30,23 +38,36 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
     setFeedback("");
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      let name = userCredential.user.displayName || "";
-      let company = "";
-
-      setSession({
-        name,
-        email: userCredential.user.email || email,
-        company,
-        createdAt: new Date().toISOString(),
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      router.push("/dashboard");
+      const payload = (await response.json()) as LoginResponse;
+
+      if (!response.ok || !payload.user || !payload.sessionToken) {
+        setStatus("error");
+        setFeedback(payload.message ?? "Unable to log in with these credentials.");
+        return;
+      }
+
+      setSession({
+        name: payload.user.name,
+        email: payload.user.email,
+        company: payload.user.company,
+        createdAt: new Date().toISOString(),
+        sessionToken: payload.sessionToken,
+      });
+
+      const destination = requestedRedirect || getLastVisitedPath() || "/dashboard";
+      router.push(destination);
       router.refresh();
-    } catch (e: any) {
+    } catch {
       setStatus("error");
-      setFeedback(e.message ?? "Unable to log in with these credentials.");
+      setFeedback("Network error. Please try again.");
     }
   }
 
