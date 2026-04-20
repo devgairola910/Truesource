@@ -1,14 +1,21 @@
-import { NextResponse } from "next/server";
+import { listContactInquiries, saveContactInquiry } from "@/lib/backend/store";
+import { jsonError, jsonOk, requireAuth } from "@/lib/backend/http";
+import { isValidEmail, toSafeMessage } from "@/lib/backend/validators";
 
 type ContactPayload = {
-  name?: string;
-  email?: string;
-  company?: string;
-  message?: string;
+  name?: unknown;
+  email?: unknown;
+  company?: unknown;
+  message?: unknown;
 };
 
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+export async function GET(request: Request) {
+  const auth = requireAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  return jsonOk({ inquiries: listContactInquiries() });
 }
 
 export async function POST(request: Request) {
@@ -17,43 +24,37 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as ContactPayload;
   } catch {
-    return NextResponse.json(
-      { message: "Invalid JSON payload." },
-      { status: 400 },
-    );
+    return jsonError("Invalid JSON payload.", 400);
   }
 
-  const name = body.name?.trim() ?? "";
-  const email = body.email?.trim() ?? "";
-  const company = body.company?.trim() ?? "";
-  const message = body.message?.trim() ?? "";
+  const name = toSafeMessage(body.name);
+  const email = toSafeMessage(body.email);
+  const company = toSafeMessage(body.company);
+  const message = toSafeMessage(body.message);
 
   if (!name || !email || !company || !message) {
-    return NextResponse.json(
-      { message: "All fields are required." },
-      { status: 400 },
-    );
+    return jsonError("All fields are required.", 400);
   }
 
   if (!isValidEmail(email)) {
-    return NextResponse.json(
-      { message: "Please enter a valid email address." },
-      { status: 400 },
-    );
+    return jsonError("Please enter a valid email address.", 400);
   }
 
   if (message.length < 20) {
-    return NextResponse.json(
-      { message: "Message should be at least 20 characters." },
-      { status: 400 },
-    );
+    return jsonError("Message should be at least 20 characters.", 400);
   }
 
-  return NextResponse.json(
+  saveContactInquiry({
+    name,
+    email,
+    company,
+    message,
+  });
+
+  return jsonOk(
     {
       message:
         "Thanks for reaching out. Our team will contact you within one business day.",
     },
-    { status: 200 },
   );
 }
