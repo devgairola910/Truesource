@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { FileUploader } from "@/components/upload/file-uploader";
+import { UploadFileItem } from "@/lib/upload";
 
 type UploadStep = "files" | "metadata" | "protection" | "review";
 const steps: { id: UploadStep; label: string }[] = [
@@ -15,12 +15,9 @@ const steps: { id: UploadStep; label: string }[] = [
   { id: "review", label: "Review" },
 ];
 
-type FileItem = { name: string; size: string; type: "image" | "video"; progress: number };
-
 export default function UploadPage() {
   const [step, setStep] = useState<UploadStep>("files");
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [files, setFiles] = useState<UploadFileItem[]>([]);
   const [title, setTitle] = useState("");
   const [owner, setOwner] = useState("Apex Sports Media");
   const [distribution, setDistribution] = useState("");
@@ -29,15 +26,7 @@ export default function UploadPage() {
 
   const currentIndex = steps.findIndex((s) => s.id === step);
 
-  const simulateUpload = () => {
-    const mockFiles: FileItem[] = [
-      { name: "matchday-promo-v2.jpg", size: "4.2 MB", type: "image", progress: 100 },
-      { name: "highlight-clip-q3.mp4", size: "128 MB", type: "video", progress: 78 },
-    ];
-    setFiles(mockFiles);
-    // Simulate progress
-    setTimeout(() => setFiles((f) => f.map((file) => ({ ...file, progress: 100 }))), 2000);
-  };
+  const allFilesDone = files.length > 0 && files.every(f => f.status === "done");
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -81,43 +70,7 @@ export default function UploadPage() {
       {/* Step content */}
       <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6">
         {step === "files" && (
-          <div className="space-y-4">
-            {/* Drop zone */}
-            <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(e) => { e.preventDefault(); setIsDragging(false); simulateUpload(); }}
-              onClick={simulateUpload}
-              className={cn(
-                "flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 px-6 cursor-pointer transition",
-                isDragging ? "border-[var(--brand)] bg-[var(--brand-surface)]" : "border-[var(--stroke)] hover:border-[var(--brand)] hover:bg-[var(--brand-surface)]"
-              )}
-            >
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--text-soft)] mb-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <p className="text-sm font-semibold text-[var(--text-strong)]">Drop files here or click to browse</p>
-              <p className="text-xs text-[var(--text-soft)] mt-1">Images (JPG, PNG, WebP) · Videos (MP4, MOV) · Max 2 GB per file</p>
-            </div>
-            {/* File list */}
-            {files.length > 0 && (
-              <div className="space-y-2">
-                {files.map((f, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-3">
-                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg shrink-0", f.type === "video" ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600")}>
-                      {f.type === "video" ? "🎬" : "🖼️"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--text-strong)] truncate">{f.name}</p>
-                      <p className="text-xs text-[var(--text-soft)]">{f.size}</p>
-                      {f.progress < 100 && <Progress value={f.progress} size="sm" className="mt-1.5" />}
-                    </div>
-                    <Badge variant={f.progress === 100 ? "success" : "info"}>
-                      {f.progress === 100 ? "Ready" : `${f.progress}%`}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <FileUploader onFilesChange={setFiles} />
         )}
 
         {step === "metadata" && (
@@ -196,7 +149,10 @@ export default function UploadPage() {
           ← Back
         </Button>
         {currentIndex < steps.length - 1 ? (
-          <Button onClick={() => setStep(steps[currentIndex + 1].id)}>
+          <Button 
+            onClick={() => setStep(steps[currentIndex + 1].id)}
+            disabled={step === "files" && (!files.length || !allFilesDone)}
+          >
             Continue →
           </Button>
         ) : (
