@@ -110,12 +110,17 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
         {feedback ? <p className="text-sm font-medium text-[var(--danger)] text-center">{feedback}</p> : null}
       </div>
 
-      <p className="text-center text-sm text-[var(--text-muted)] mt-4">
-        New here?
-        <Link href="/signup" className="ml-1 font-semibold text-[var(--brand)] hover:underline">
-          Create an account
+      <div className="text-center space-y-2 mt-4">
+        <Link href="/forgot-password" className="text-sm text-[var(--text-muted)] hover:text-[var(--brand)] transition">
+          Forgot your password?
         </Link>
-      </p>
+        <p className="text-sm text-[var(--text-muted)]">
+          New here?
+          <Link href="/signup" className="ml-1 font-semibold text-[var(--brand)] hover:underline">
+            Create an account
+          </Link>
+        </p>
+      </div>
     </form>
   );
 }
