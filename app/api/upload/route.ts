@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { uploadToGCS } from "@/lib/gcs";
 
 export async function POST(request: Request) {
   try {
@@ -12,24 +13,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // In a real application, you would:
-    // 1. Upload to Cloud Storage (S3, GCS, etc)
-    // 2. Add a record to your database
-    // 3. Trigger processing pipelines
+    // Determine destination path based on media type
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    
+    let prefix = "";
+    if (isImage) prefix = "images/";
+    else if (isVideo) prefix = "videos/";
+    else prefix = "others/";
 
-    // For now, simulate a slight delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const destination = `${prefix}${fileName}`;
+
+    // Read file into buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Upload to GCS bucket: truesource-official-registry
+    const publicUrl = await uploadToGCS(buffer, destination, file.type);
 
     return NextResponse.json({
       assetId: `AST-${Date.now()}`,
       fileName: file.name,
+      url: publicUrl,
       size: file.size,
       success: true,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Cloud Storage upload error:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Failed to upload file to cloud storage" },
       { status: 500 }
     );
   }

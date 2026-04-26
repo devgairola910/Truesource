@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -28,11 +28,9 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
 
   const updateItem = useCallback((id: string, updates: Partial<UploadFileItem>) => {
     setItems((prev) => {
-      const next = prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
-      onFilesChange?.(next);
-      return next;
+      return prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
     });
-  }, [onFilesChange]);
+  }, []);
 
   const startUpload = useCallback(async (item: UploadFileItem) => {
     try {
@@ -75,11 +73,7 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
       status: "queued",
     }));
 
-    setItems((prev) => {
-      const next = [...prev, ...newItems];
-      onFilesChange?.(next);
-      return next;
-    });
+    setItems((prev) => [...prev, ...newItems]);
 
     // Start uploads
     newItems.forEach((item) => startUpload(item));
@@ -114,6 +108,10 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
   const removeFile = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
+
+  useEffect(() => {
+    onFilesChange?.(items);
+  }, [items, onFilesChange]);
 
   return (
     <div className="space-y-4">
