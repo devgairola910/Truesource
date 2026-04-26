@@ -22,8 +22,8 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 left-0 z-30 flex h-[var(--topbar-height)] items-center border-b border-[var(--stroke)] bg-[var(--surface-2)]/80 backdrop-blur-xl px-6 gap-4 transition-all duration-300",
-        sidebarCollapsed ? "lg:left-[68px]" : "lg:left-[var(--sidebar-width)]"
+        "fixed top-0 right-0 left-0 z-40 flex h-16 items-center border-b border-[var(--stroke)] bg-[var(--surface-2)]/80 backdrop-blur-xl px-6 gap-4 transition-all duration-300",
+        sidebarCollapsed ? "lg:left-[70px]" : "lg:left-64"
       )}
     >
       {/* Mobile menu button */}

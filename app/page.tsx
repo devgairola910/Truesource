@@ -19,103 +19,80 @@ const valuePoints = [
   },
 ];
 
+import { HeroSection } from "@/components/layout/HeroSection";
+
 export default function Home() {
   return (
-    <>
-      <section className="reveal-up modern-card rounded-3xl border border-[var(--stroke)] bg-white p-8 md:p-12 text-center flex flex-col items-center">
-        <p className="inline-block rounded-full bg-[var(--surface-1)] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--brand)] mb-4">
-          Welcome to TrueSource
-        </p>
-        <h2 className="max-w-4xl font-heading text-4xl font-extrabold tracking-tight text-[var(--text-strong)] md:text-6xl md:leading-[1.1]">
-          Protect your official media with fast detection and explainable evidence.
-        </h2>
-        <p className="mt-6 max-w-2xl text-lg text-[var(--text-muted)] md:text-xl leading-relaxed">
-          TrueSource helps rights teams register official assets, monitor public channels,
-          review suspicious reuse, and act with confidence. Our product is designed for
-          practical execution, not vague promises, so teams can move from discovery to
-          decision without workflow friction.
-        </p>
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <Link
-            href="/services"
-            className="rounded-full bg-[var(--brand)] px-6 py-3.5 text-base font-semibold text-[var(--brand-ink)] shadow-lg shadow-[var(--brand)]/20 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--brand)]/30"
-          >
-            Explore Services
-          </Link>
-          <Link
-            href="/contact"
-            className="rounded-full border border-[var(--stroke)] bg-white px-6 py-3.5 text-base font-semibold text-[var(--text-strong)] shadow-sm transition-all hover:bg-[var(--surface-1)] hover:-translate-y-1"
-          >
-            Contact Our Team
-          </Link>
-        </div>
-      </section>
+    <div className="mx-auto max-w-7xl px-4 md:px-12 py-16 md:py-24 space-y-16 md:space-y-32">
+      <HeroSection />
 
-      <section className="grid gap-5 md:grid-cols-3">
-        {valuePoints.map((point) => (
-          <SectionCard
-            key={point.title}
-            className="reveal-up"
-            title={point.title}
-            description="Why this matters"
-          >
-            <p className="text-sm leading-7 text-[var(--text-muted)]">{point.description}</p>
-          </SectionCard>
-        ))}
-      </section>
+      <div className="space-y-12">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--brand)] text-center">Tactical Advantages</h3>
+        <section className="grid gap-6 md:grid-cols-3">
+          {valuePoints.map((point) => (
+            <SectionCard
+              key={point.title}
+              className="reveal-up border border-[var(--stroke)]/50"
+              title={point.title}
+              description="Advantage Node"
+            >
+              <p className="text-sm leading-7 text-[var(--text-muted)] font-medium">{point.description}</p>
+            </SectionCard>
+          ))}
+        </section>
+      </div>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-6 lg:grid-cols-2">
         <SectionCard
-          className="reveal-up"
-          title="What You Can Do With TrueSource"
+          className="reveal-up border border-[var(--stroke)]/50"
+          title="Operational Capacity"
           description="Core outcomes teams expect in the first release"
         >
-          <ul className="space-y-2 text-sm leading-7 text-[var(--text-muted)]">
-            <li>Upload and organize official images and videos as a source of truth.</li>
-            <li>Monitor selected public channels for suspicious media reuse patterns.</li>
-            <li>Review alerts with clear confidence breakdown and incident context.</li>
-            <li>Whitelist authorized domains to reduce noise and improve precision.</li>
-            <li>Track operational KPIs like triage speed and false positive rate.</li>
+          <ul className="space-y-3 text-sm leading-7 text-[var(--text-muted)] font-medium">
+            <li className="flex gap-3">
+               <span className="text-[var(--brand)]">01</span>
+               <span>Upload and organize official images and videos as a source of truth.</span>
+            </li>
+            <li className="flex gap-3">
+               <span className="text-[var(--brand)]">02</span>
+               <span>Monitor selected public channels for suspicious media reuse patterns.</span>
+            </li>
+            <li className="flex gap-3">
+               <span className="text-[var(--brand)]">03</span>
+               <span>Review alerts with clear confidence breakdown and incident context.</span>
+            </li>
+            <li className="flex gap-3">
+               <span className="text-[var(--brand)]">04</span>
+               <span>Whitelist authorized domains to reduce noise and improve precision.</span>
+            </li>
           </ul>
         </SectionCard>
 
         <SectionCard
-          className="reveal-up"
-          title="Start Here"
+          className="reveal-up border border-[var(--stroke)]/50"
+          title="Registry Entry"
           description="Suggested path through the site"
         >
-          <ol className="space-y-3 text-sm leading-7 text-[var(--text-muted)]">
-            <li>
-              Learn who we are and how we approach detection in the
-              <Link href="/about" className="mx-1 font-semibold text-[var(--text-strong)] underline">
-                About page
-              </Link>
-              .
+          <ol className="space-y-4 text-sm leading-7 text-[var(--text-muted)] font-medium">
+            <li className="flex items-center gap-4 group">
+               <div className="h-8 w-8 rounded-lg bg-[var(--surface-1)] flex items-center justify-center text-[10px] font-black group-hover:bg-[var(--brand)] group-hover:text-white transition-colors">01</div>
+               <Link href="/about" className="hover:text-[var(--brand)] transition-colors">Learn who we are and our approach</Link>
             </li>
-            <li>
-              Review capabilities and implementation scope in
-              <Link href="/services" className="mx-1 font-semibold text-[var(--text-strong)] underline">
-                Services
-              </Link>
-              .
+            <li className="flex items-center gap-4 group">
+               <div className="h-8 w-8 rounded-lg bg-[var(--surface-1)] flex items-center justify-center text-[10px] font-black group-hover:bg-[var(--brand)] group-hover:text-white transition-colors">02</div>
+               <Link href="/services" className="hover:text-[var(--brand)] transition-colors">Review capabilities and implementation scope</Link>
             </li>
-            <li>
-              Read practical insights from our team in the
-              <Link href="/blog" className="mx-1 font-semibold text-[var(--text-strong)] underline">
-                Blog
-              </Link>
-              .
+            <li className="flex items-center gap-4 group">
+               <div className="h-8 w-8 rounded-lg bg-[var(--surface-1)] flex items-center justify-center text-[10px] font-black group-hover:bg-[var(--brand)] group-hover:text-white transition-colors">03</div>
+               <Link href="/blog" className="hover:text-[var(--brand)] transition-colors">Read practical insights from our team</Link>
             </li>
-            <li>
-              Reach out for onboarding, pilots, or demos through
-              <Link href="/contact" className="mx-1 font-semibold text-[var(--text-strong)] underline">
-                Contact
-              </Link>
-              .
+            <li className="flex items-center gap-4 group">
+               <div className="h-8 w-8 rounded-lg bg-[var(--surface-1)] flex items-center justify-center text-[10px] font-black group-hover:bg-[var(--brand)] group-hover:text-white transition-colors">04</div>
+               <Link href="/contact" className="hover:text-[var(--brand)] transition-colors">Reach out for onboarding or pilots</Link>
             </li>
           </ol>
         </SectionCard>
       </section>
-    </>
+    </div>
   );
 }

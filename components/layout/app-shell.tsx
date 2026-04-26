@@ -37,9 +37,9 @@ export function AppShell({ children }: AppShellProps) {
       {/* Main content */}
       <main
         className={cn(
-          "pt-[var(--topbar-height)] min-h-screen transition-all duration-300",
-          "lg:pl-[var(--sidebar-width)]",
-          collapsed && "lg:pl-[68px]"
+          "pt-16 min-h-screen transition-all duration-300",
+          "lg:pl-64",
+          collapsed && "lg:pl-[70px]"
         )}
       >
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-6">

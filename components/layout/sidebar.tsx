@@ -75,14 +75,14 @@ export function Sidebar({ collapsed, onToggle, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-[var(--stroke)] bg-[var(--surface-2)]",
+        "fixed left-0 top-0 bottom-0 z-50 flex flex-col border-r border-[var(--stroke)] bg-[var(--surface-2)]",
         "transition-all duration-300 ease-in-out",
-        collapsed ? "w-[68px]" : "w-[var(--sidebar-width)]",
+        collapsed ? "w-[70px]" : "w-64",
         className
       )}
     >
       {/* Logo */}
-      <div className="flex h-[var(--topbar-height)] items-center border-b border-[var(--stroke)] px-4 shrink-0">
+      <div className="flex h-16 items-center border-b border-[var(--stroke)] px-4 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)] text-white">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>

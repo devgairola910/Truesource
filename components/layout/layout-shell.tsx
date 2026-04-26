@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { SiteHeader } from "@/components/site/site-header";
-import { SiteFooter } from "@/components/site/site-footer";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 /**
  * Conditionally renders the marketing header/footer/wrapper.
@@ -21,12 +21,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-5 md:px-8 md:py-8">
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1 flex flex-col pt-20">
         {children}
       </main>
-      <SiteFooter />
-    </>
+      <Footer />
+    </div>
   );
 }
