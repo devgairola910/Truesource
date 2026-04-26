@@ -4,16 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getLastVisitedPath, getSession, setSession } from "@/lib/auth-client";
-
-type LoginResponse = {
-  message?: string;
-  sessionToken?: string;
-  user?: {
-    name: string;
-    email: string;
-    company: string;
-  };
-};
+import { useFirebaseAuth } from "@/lib/hooks/use-firebase-auth";
 
 type LoginFormProps = {
   requestedRedirect: string | null;
@@ -21,6 +12,7 @@ type LoginFormProps = {
 
 export function LoginForm({ requestedRedirect }: LoginFormProps) {
   const router = useRouter();
+  const { login } = useFirebaseAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -38,36 +30,23 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
     setFeedback("");
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const payload = (await response.json()) as LoginResponse;
-
-      if (!response.ok || !payload.user || !payload.sessionToken) {
-        setStatus("error");
-        setFeedback(payload.message ?? "Unable to log in with these credentials.");
-        return;
-      }
+      const userCredential = await login(email, password);
+      const fbUser = userCredential.user;
 
       setSession({
-        name: payload.user.name,
-        email: payload.user.email,
-        company: payload.user.company,
+        name: fbUser.displayName || email.split('@')[0],
+        email: fbUser.email || email,
+        company: "Company", // Placeholder as Firebase doesn't track this by default
         createdAt: new Date().toISOString(),
-        sessionToken: payload.sessionToken,
+        sessionToken: fbUser.uid,
       });
 
       const destination = requestedRedirect || getLastVisitedPath() || "/dashboard";
       router.push(destination);
       router.refresh();
-    } catch {
+    } catch (error: any) {
       setStatus("error");
-      setFeedback("Network error. Please try again.");
+      setFeedback(error.message || "Unable to log in with these credentials.");
     }
   }
 

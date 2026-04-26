@@ -4,19 +4,12 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, setSession } from "@/lib/auth-client";
-
-type SignupResponse = {
-  message?: string;
-  sessionToken?: string;
-  user?: {
-    name: string;
-    email: string;
-    company: string;
-  };
-};
+import { useFirebaseAuth } from "@/lib/hooks/use-firebase-auth";
+import { updateProfile } from "firebase/auth";
 
 export function SignupForm() {
   const router = useRouter();
+  const { signup } = useFirebaseAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -36,35 +29,24 @@ export function SignupForm() {
     setFeedback("");
 
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, company, password }),
-      });
+      const userCredential = await signup(email, password);
+      const fbUser = userCredential.user;
 
-      const payload = (await response.json()) as SignupResponse;
-
-      if (!response.ok || !payload.user || !payload.sessionToken) {
-        setStatus("error");
-        setFeedback(payload.message ?? "Could not create account.");
-        return;
-      }
+      await updateProfile(fbUser, { displayName: name });
 
       setSession({
-        name: payload.user.name,
-        email: payload.user.email,
-        company: payload.user.company,
+        name: name,
+        email: email,
+        company: company,
         createdAt: new Date().toISOString(),
-        sessionToken: payload.sessionToken,
+        sessionToken: fbUser.uid,
       });
 
       router.push("/welcome");
       router.refresh();
-    } catch {
+    } catch (error: any) {
       setStatus("error");
-      setFeedback("Network error. Please try again.");
+      setFeedback(error.message || "Could not create account.");
     }
   }
 
