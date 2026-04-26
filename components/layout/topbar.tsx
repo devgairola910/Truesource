@@ -124,7 +124,7 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
 
       {/* Quick Upload Modal */}
       <Modal
-        isOpen={uploadModalOpen}
+        open={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         title="Quick Upload"
         description="Select files to upload and protect instantly."

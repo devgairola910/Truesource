@@ -15,7 +15,7 @@ type RouteParams = {
 const validStatuses = new Set(["new", "confirmed", "dismissed", "whitelisted"]);
 
 export async function PATCH(request: Request, { params }: RouteParams) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
