@@ -27,12 +27,12 @@ export async function POST(request: Request) {
     return jsonError("Please provide a valid email address.", 400);
   }
 
-  const authenticated = authenticateUser({ email, password });
+  const authenticated = await authenticateUser({ email, password });
   if (!authenticated.ok) {
     return jsonError("Invalid email or password.", 401);
   }
 
-  const session = createSession(authenticated.user.id);
+  const session = await createSession(authenticated.user.id);
 
   return jsonOk({
     message: "Logged in successfully.",

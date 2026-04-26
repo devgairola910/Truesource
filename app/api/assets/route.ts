@@ -10,16 +10,16 @@ type AssetPayload = {
 };
 
 export async function GET(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
 
-  return jsonOk({ assets: listAssets() });
+  return jsonOk({ assets: await listAssets() });
 }
 
 export async function POST(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return jsonError("kind must be either image or video.", 400);
   }
 
-  const asset = addAsset({
+  const asset = await addAsset({
     title,
     kind,
     rightsOwner,

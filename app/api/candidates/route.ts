@@ -2,10 +2,10 @@ import { listCandidates } from "@/lib/backend/store";
 import { jsonOk, requireAuth } from "@/lib/backend/http";
 
 export async function GET(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
 
-  return jsonOk({ candidates: listCandidates() });
+  return jsonOk({ candidates: await listCandidates() });
 }

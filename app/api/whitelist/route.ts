@@ -13,16 +13,16 @@ type WhitelistPayload = {
 };
 
 export async function GET(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
 
-  return jsonOk({ domains: listWhitelistDomains() });
+  return jsonOk({ domains: await listWhitelistDomains() });
 }
 
 export async function POST(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return jsonError("Please provide a valid domain.", 400);
   }
 
-  const created = addWhitelistDomain({ domain, owner, reason });
+  const created = await addWhitelistDomain({ domain, owner, reason });
   if (!created.ok) {
     return jsonError("Domain already exists in whitelist.", 409);
   }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
@@ -67,7 +67,7 @@ export async function DELETE(request: Request) {
     return jsonError("domain query parameter is required.", 400);
   }
 
-  const removed = removeWhitelistDomain(domain);
+  const removed = await removeWhitelistDomain(domain);
   if (!removed) {
     return jsonError("Domain not found.", 404);
   }

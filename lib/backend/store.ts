@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { db } from "@/lib/firebase-admin";
 import {
   alerts as seedAlerts,
   assets as seedAssets,
@@ -15,30 +16,32 @@ import type {
   DashboardSnapshot,
   LoginInput,
   SessionRecord,
-  StoreState,
   UpdateAlertStatusInput,
 } from "@/lib/backend/types";
 import { normalizeEmail } from "@/lib/backend/validators";
 
-const store: StoreState = {
-  users: new Map<string, AuthUser>(),
-  sessions: new Map<string, SessionRecord>(),
-  contactInquiries: [],
-  assets: [...seedAssets],
-  candidates: [...seedCandidates],
-  alerts: [...seedAlerts],
-  kpis: [...seedKpis],
-  whitelistDomains: [...seedWhitelist],
-};
+// ─── Collections ────────────────────────────────────────────────────
+const USERS_COL = "users";
+const SESSIONS_COL = "sessions";
+const ASSETS_COL = "assets";
+const ALERTS_COL = "alerts";
+const KPIS_COL = "kpis";
+const WHITELIST_COL = "whitelist";
+const CONTACT_COL = "contact_inquiries";
+const CANDIDATES_COL = "candidates";
 
 function hashPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
 
-export function createUser(input: CreateUserInput) {
-  const email = normalizeEmail(input.email);
+// ─── Store Functions ────────────────────────────────────────────────
 
-  if (store.users.has(email)) {
+export async function createUser(input: CreateUserInput) {
+  const email = normalizeEmail(input.email);
+  const userRef = db.collection(USERS_COL).doc(email);
+  const existing = await userRef.get();
+
+  if (existing.exists) {
     return {
       ok: false as const,
       reason: "EMAIL_EXISTS" as const,
@@ -54,7 +57,7 @@ export function createUser(input: CreateUserInput) {
     createdAt: new Date().toISOString(),
   };
 
-  store.users.set(email, user);
+  await userRef.set(user);
 
   return {
     ok: true as const,
@@ -62,18 +65,21 @@ export function createUser(input: CreateUserInput) {
   };
 }
 
-export function authenticateUser(input: LoginInput) {
+export async function authenticateUser(input: LoginInput) {
   const email = normalizeEmail(input.email);
-  const existing = store.users.get(email);
+  const userRef = db.collection(USERS_COL).doc(email);
+  const doc = await userRef.get();
 
-  if (!existing) {
+  if (!doc.exists) {
     return {
       ok: false as const,
       reason: "INVALID_CREDENTIALS" as const,
     };
   }
 
-  const matches = hashPassword(input.password) === existing.passwordHash;
+  const user = doc.data() as AuthUser;
+  const matches = hashPassword(input.password) === user.passwordHash;
+  
   if (!matches) {
     return {
       ok: false as const,
@@ -83,11 +89,11 @@ export function authenticateUser(input: LoginInput) {
 
   return {
     ok: true as const,
-    user: existing,
+    user,
   };
 }
 
-export function createSession(userId: string) {
+export async function createSession(userId: string) {
   const token = randomUUID();
   const session: SessionRecord = {
     token,
@@ -95,35 +101,40 @@ export function createSession(userId: string) {
     createdAt: new Date().toISOString(),
   };
 
-  store.sessions.set(token, session);
+  await db.collection(SESSIONS_COL).doc(token).set(session);
   return session;
 }
 
-export function getSession(token: string) {
-  return store.sessions.get(token);
+export async function getSession(token: string) {
+  const doc = await db.collection(SESSIONS_COL).doc(token).get();
+  if (!doc.exists) return undefined;
+  return doc.data() as SessionRecord;
 }
 
-export function deleteSession(token: string) {
-  return store.sessions.delete(token);
+export async function deleteSession(token: string) {
+  await db.collection(SESSIONS_COL).doc(token).delete();
+  return true;
 }
 
-export function getUserById(id: string) {
-  for (const user of store.users.values()) {
-    if (user.id === id) {
-      return user;
-    }
+export async function getUserById(id: string) {
+  const query = await db.collection(USERS_COL).where("id", "==", id).limit(1).get();
+  if (query.empty) return undefined;
+  return query.docs[0].data() as AuthUser;
+}
+
+export async function listAssets() {
+  const snapshot = await db.collection(ASSETS_COL).orderBy("id", "desc").get();
+  if (snapshot.empty) {
+    // If empty in cloud, fallback to local seeds if needed (for initial dev)
+    return seedAssets;
   }
-
-  return undefined;
+  return snapshot.docs.map(doc => doc.data());
 }
 
-export function listAssets() {
-  return [...store.assets];
-}
-
-export function addAsset(input: CreateAssetInput) {
+export async function addAsset(input: CreateAssetInput) {
+  const id = `AST-${Math.floor(Math.random() * 9000) + 1000}`;
   const asset = {
-    id: `AST-${Math.floor(Math.random() * 9000) + 1000}`,
+    id,
     title: input.title.trim(),
     kind: input.kind,
     rightsOwner: input.rightsOwner.trim(),
@@ -132,42 +143,44 @@ export function addAsset(input: CreateAssetInput) {
     lastUpdated: "just now",
   };
 
-  store.assets = [asset, ...store.assets];
+  await db.collection(ASSETS_COL).doc(id).set(asset);
   return asset;
 }
 
-export function listCandidates() {
-  return [...store.candidates];
+export async function listCandidates() {
+  const snapshot = await db.collection(CANDIDATES_COL).get();
+  if (snapshot.empty) return seedCandidates;
+  return snapshot.docs.map(doc => doc.data());
 }
 
-export function listAlerts() {
-  return [...store.alerts];
+export async function listAlerts() {
+  const snapshot = await db.collection(ALERTS_COL).orderBy("id", "desc").get();
+  if (snapshot.empty) return seedAlerts;
+  return snapshot.docs.map(doc => doc.data());
 }
 
-export function updateAlertStatus(alertId: string, input: UpdateAlertStatusInput) {
-  let updated = null as (typeof store.alerts)[number] | null;
+export async function updateAlertStatus(alertId: string, input: UpdateAlertStatusInput) {
+  const ref = db.collection(ALERTS_COL).doc(alertId);
+  const doc = await ref.get();
+  
+  if (!doc.exists) return null;
 
-  store.alerts = store.alerts.map((alert) => {
-    if (alert.id !== alertId) {
-      return alert;
-    }
-
-    updated = { ...alert, status: input.status };
-    return updated;
-  });
-
-  return updated;
+  await ref.update({ status: input.status });
+  return { ...(doc.data() as any), status: input.status };
 }
 
-export function listWhitelistDomains() {
-  return [...store.whitelistDomains];
+export async function listWhitelistDomains() {
+  const snapshot = await db.collection(WHITELIST_COL).get();
+  if (snapshot.empty) return seedWhitelist;
+  return snapshot.docs.map(doc => doc.data());
 }
 
-export function addWhitelistDomain(input: CreateWhitelistInput) {
+export async function addWhitelistDomain(input: CreateWhitelistInput) {
   const domain = input.domain.trim().toLowerCase();
-  const existing = store.whitelistDomains.find((entry) => entry.domain === domain);
+  const ref = db.collection(WHITELIST_COL).doc(domain);
+  const existing = await ref.get();
 
-  if (existing) {
+  if (existing.exists) {
     return {
       ok: false as const,
       reason: "DOMAIN_EXISTS" as const,
@@ -180,7 +193,7 @@ export function addWhitelistDomain(input: CreateWhitelistInput) {
     reason: input.reason.trim(),
   };
 
-  store.whitelistDomains = [record, ...store.whitelistDomains];
+  await ref.set(record);
 
   return {
     ok: true as const,
@@ -188,51 +201,59 @@ export function addWhitelistDomain(input: CreateWhitelistInput) {
   };
 }
 
-export function removeWhitelistDomain(domain: string) {
+export async function removeWhitelistDomain(domain: string) {
   const normalized = domain.trim().toLowerCase();
-  const before = store.whitelistDomains.length;
-  store.whitelistDomains = store.whitelistDomains.filter(
-    (entry) => entry.domain !== normalized,
-  );
-
-  return before !== store.whitelistDomains.length;
+  const ref = db.collection(WHITELIST_COL).doc(normalized);
+  const existing = await ref.get();
+  if (!existing.exists) return false;
+  
+  await ref.delete();
+  return true;
 }
 
-export function listKpis() {
-  return [...store.kpis];
+export async function listKpis() {
+  const snapshot = await db.collection(KPIS_COL).get();
+  if (snapshot.empty) return seedKpis;
+  return snapshot.docs.map(doc => doc.data());
 }
 
-export function createDashboardSnapshot(): DashboardSnapshot {
-  const openAlerts = store.alerts.filter((alert) => alert.status === "new").length;
-  const confirmedToday = store.alerts.filter(
-    (alert) => alert.status === "confirmed",
+export async function createDashboardSnapshot(): Promise<DashboardSnapshot> {
+  const alerts = await listAlerts();
+  const whitelist = await listWhitelistDomains();
+  const candidates = await listCandidates();
+
+  const openAlerts = alerts.filter((alert: any) => alert.status === "new").length;
+  const confirmedToday = alerts.filter(
+    (alert: any) => alert.status === "confirmed",
   ).length;
 
   return {
     metrics: [
       { label: "Open Alerts", value: String(openAlerts) },
       { label: "Confirmed Today", value: String(confirmedToday) },
-      { label: "Suppressed Sources", value: String(store.whitelistDomains.length) },
+      { label: "Suppressed Sources", value: String(whitelist.length) },
       {
         label: "Monitored Candidates",
-        value: String(store.candidates.length),
+        value: String(candidates.length),
       },
     ],
-    recentAlerts: store.alerts.slice(0, 5),
+    recentAlerts: alerts.slice(0, 5) as any[],
   };
 }
 
-export function saveContactInquiry(inquiry: Omit<ContactInquiry, "id" | "createdAt">) {
+export async function saveContactInquiry(inquiry: Omit<ContactInquiry, "id" | "createdAt">) {
+  const id = randomUUID();
   const record: ContactInquiry = {
-    id: randomUUID(),
+    id,
     createdAt: new Date().toISOString(),
     ...inquiry,
-  };
+  } as any;
 
-  store.contactInquiries = [record, ...store.contactInquiries];
+  await db.collection(CONTACT_COL).doc(id).set(record);
   return record;
 }
 
-export function listContactInquiries() {
-  return [...store.contactInquiries];
+export async function listContactInquiries() {
+  const snapshot = await db.collection(CONTACT_COL).get();
+  return snapshot.docs.map(doc => doc.data());
 }

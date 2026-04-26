@@ -2,7 +2,7 @@ import { deleteSession } from "@/lib/backend/store";
 import { jsonError, jsonOk, requireAuth } from "@/lib/backend/http";
 
 export async function GET(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
@@ -17,11 +17,11 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return jsonError("Session is already invalid.", 200);
   }
 
-  deleteSession(auth.token);
+  await deleteSession(auth.token);
   return jsonOk({ message: "Logged out successfully." });
 }

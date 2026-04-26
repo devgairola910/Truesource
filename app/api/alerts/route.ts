@@ -2,7 +2,7 @@ import { listAlerts } from "@/lib/backend/store";
 import { jsonOk, requireAuth } from "@/lib/backend/http";
 
 export async function GET(request: Request) {
-  const auth = requireAuth(request);
+  const auth = await requireAuth(request);
   if (!auth.ok) {
     return auth.response;
   }
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const statusFilter = url.searchParams.get("status");
 
-  const alerts = listAlerts().filter((alert) => {
+  const alerts = (await listAlerts()).filter((alert) => {
     if (!statusFilter) {
       return true;
     }

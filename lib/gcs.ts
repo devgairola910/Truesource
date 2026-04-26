@@ -1,17 +1,30 @@
 import { Storage } from "@google-cloud/storage";
 
-// Initialize GCS storage client
-// It will automatically use GOOGLE_APPLICATION_CREDENTIALS env var if present,
-// or fallback to default credentials on GCP environments.
-export const storage = new Storage();
+// Initialize GCS storage client using the unified Service Account
+let storageConfig = {};
+const saJson = process.env.GCP_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+
+if (saJson) {
+  try {
+    const credentials = JSON.parse(saJson);
+    storageConfig = {
+      projectId: credentials.project_id,
+      credentials: {
+        client_email: credentials.client_email,
+        private_key: credentials.private_key?.replace(/\\n/g, "\n"),
+      },
+    };
+  } catch (err) {
+    console.error("Critical: Failed to parse Service Account JSON. Falling back to default credentials.", err);
+  }
+}
+
+export const storage = new Storage(storageConfig);
 
 export const BUCKET_NAME = "truesource-official-registry";
 
 /**
  * Uploads a file buffer to a specific GCS bucket and path.
- * @param buffer File content buffer
- * @param destination Destination path in the bucket (e.g. 'images/my-file.jpg')
- * @param contentType MIME type of the file
  */
 export async function uploadToGCS(
   buffer: Buffer,

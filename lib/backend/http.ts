@@ -29,7 +29,7 @@ export function extractBearerToken(request: Request) {
   return token.trim();
 }
 
-export function requireAuth(request: Request) {
+export async function requireAuth(request: Request) {
   const token = extractBearerToken(request);
   if (!token) {
     return {
@@ -38,7 +38,7 @@ export function requireAuth(request: Request) {
     };
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return {
       ok: false as const,
@@ -46,7 +46,7 @@ export function requireAuth(request: Request) {
     };
   }
 
-  const user = getUserById(session.userId);
+  const user = await getUserById(session.userId);
   if (!user) {
     return {
       ok: false as const,

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return jsonError("Password must be at least 8 characters.", 400);
   }
 
-  const created = createUser({ name, email, company, password });
+  const created = await createUser({ name, email, company, password });
   if (!created.ok) {
     return jsonError(
       "An account with this email already exists. Please log in instead.",
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = createSession(created.user.id);
+  const session = await createSession(created.user.id);
 
   return jsonOk(
     {
