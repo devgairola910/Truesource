@@ -85,8 +85,10 @@ export type UploadFileItem = {
   mediaType: "image" | "video";
   progress: number; // 0-100
   status: UploadStatus;
+  url?: string;
   error?: string;
 };
+
 
 /** Derive media type from MIME */
 export function getMediaType(file: File): "image" | "video" {
@@ -148,11 +150,35 @@ export function uploadFile(
  * Upload a file to the real API endpoint.
  * Uses XMLHttpRequest for native progress events.
  */
-export function uploadFileToAPI(
+/**
+ * Upload a file to the real API endpoint.
+ * Automatically switches to Signed URL upload for videos or large files.
+ */
+export async function uploadFileToAPI(
   file: File,
   onProgress: (pct: number) => void,
   signal?: AbortSignal
-): Promise<{ assetId: string; fileName: string }> {
+): Promise<{ assetId: string; fileName: string; url?: string }> {
+  // Use direct POST for files under 15MB. 
+  // This bypasses CORS issues with signed URLs for most common media.
+  const isLarge = file.size > 15 * 1024 * 1024; // 15MB
+
+  if (isLarge) {
+    return uploadViaSignedUrl(file, onProgress, signal);
+  }
+
+  return uploadViaDirectPost(file, onProgress, signal);
+}
+
+/**
+ * Strategy 1: Direct POST to /api/upload
+ * (Best for small images, limited by Next.js body limits)
+ */
+async function uploadViaDirectPost(
+  file: File,
+  onProgress: (pct: number) => void,
+  signal?: AbortSignal
+): Promise<{ assetId: string; fileName: string; url?: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
@@ -174,14 +200,30 @@ export function uploadFileToAPI(
           resolve({ assetId: `AST-${Date.now()}`, fileName: file.name });
         }
       } else {
-        reject(new Error(`Upload failed (HTTP ${xhr.status})`));
+        let errorMessage = `Upload failed (HTTP ${xhr.status})`;
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          if (errorData.details) {
+            errorMessage = errorData.details;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // Fallback to default
+        }
+        reject(new Error(errorMessage));
       }
     });
 
-    xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
-    xhr.addEventListener("abort", () => reject(new DOMException("Upload cancelled", "AbortError")));
+    xhr.addEventListener("error", () => {
+      console.error("Direct upload network error", xhr);
+      reject(new Error("Network error during upload"));
+    });
+    xhr.addEventListener("abort", () => {
+      console.warn("Upload aborted");
+      reject(new DOMException("Upload cancelled", "AbortError"));
+    });
 
-    // Hook up AbortSignal
     if (signal) {
       signal.addEventListener("abort", () => xhr.abort());
     }
@@ -190,3 +232,75 @@ export function uploadFileToAPI(
     xhr.send(formData);
   });
 }
+
+/**
+ * Strategy 2: Get Signed URL from API, then PUT directly to GCS
+ * (Required for large videos to bypass server limits)
+ */
+async function uploadViaSignedUrl(
+  file: File,
+  onProgress: (pct: number) => void,
+  signal?: AbortSignal
+): Promise<{ assetId: string; fileName: string; url?: string }> {
+  try {
+    // 1. Get signed URL
+    const signRes = await fetch(
+      `/api/upload?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`,
+      { signal }
+    );
+    
+    if (!signRes.ok) {
+      const err = await signRes.json();
+      throw new Error(err.error || "Failed to get signed upload URL");
+    }
+
+    const { uploadUrl, publicUrl } = await signRes.json();
+
+    // 2. Upload directly to GCS using PUT
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          onProgress(pct);
+        }
+      });
+
+      xhr.addEventListener("load", () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({
+            assetId: `AST-${Date.now()}`,
+            fileName: file.name,
+            url: publicUrl,
+          });
+        } else {
+          reject(new Error(`GCS upload failed (HTTP ${xhr.status})`));
+        }
+      });
+
+      xhr.addEventListener("error", (e) => {
+        console.error("Signed URL upload network error:", e);
+        reject(new Error("Network error during direct upload. This usually indicates a CORS issue on the GCS bucket."));
+      });
+      xhr.addEventListener("abort", () => {
+        console.warn("Signed URL upload aborted");
+        reject(new DOMException("Upload cancelled", "AbortError"));
+      });
+
+      if (signal) {
+        signal.addEventListener("abort", () => xhr.abort());
+      }
+
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.send(file);
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw err;
+    }
+    throw new Error(err instanceof Error ? err.message : "Signed upload failed");
+  }
+}
+

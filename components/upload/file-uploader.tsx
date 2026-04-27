@@ -36,13 +36,14 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
     try {
       updateItem(item.id, { status: "uploading", progress: 0 });
       
-      await uploadFileToAPI(
+      const result = await uploadFileToAPI(
         item.file,
         (progress) => updateItem(item.id, { progress })
       );
 
-      updateItem(item.id, { status: "done", progress: 100 });
+      updateItem(item.id, { status: "done", progress: 100, url: result.url });
       addToast({ type: "success", title: "Upload Complete", message: `Successfully uploaded ${item.name}` });
+
     } catch (err) {
       updateItem(item.id, { status: "error", error: err instanceof Error ? err.message : "Upload failed" });
       addToast({ type: "error", title: "Upload Failed", message: `Could not upload ${item.name}` });
