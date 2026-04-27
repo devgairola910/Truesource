@@ -2,7 +2,7 @@ import { Storage } from "@google-cloud/storage";
 
 // Initialize GCS storage client using the unified Service Account
 let storageConfig = {};
-const saJson = process.env.GCP_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+const saJson = process.env.COMPUTE_SERVICE_ACCOUNT;
 
 if (saJson) {
   try {
@@ -21,7 +21,7 @@ if (saJson) {
 
 export const storage = new Storage(storageConfig);
 
-export const BUCKET_NAME = "truesource-official-registry";
+export const BUCKET_NAME = "official-registry";
 
 /**
  * Uploads a file buffer to a specific GCS bucket and path.

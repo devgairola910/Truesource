@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 
-const saJson = process.env.GCP_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+const saJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
 let app: admin.app.App;
 
@@ -19,10 +19,10 @@ if (admin.apps.length === 0) {
   }
 
   app = admin.initializeApp({
-    credential: credentials ? admin.credential.cert(credentials) : undefined,
+    credential: credentials ? admin.credential.cert(credentials) : admin.credential.applicationDefault(),
     // Database URL is often required for some Firebase features, but not for Firestore.
     // However, it's good practice to provide it if available.
-    databaseURL: `https://${credentials?.project_id || "truesource-platform"}.firebaseio.com`,
+    databaseURL: `https://${credentials?.project_id || "truesource-application"}.firebaseio.com`,
   });
 } else {
   app = admin.app();

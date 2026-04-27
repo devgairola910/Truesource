@@ -2,8 +2,8 @@ const { Storage } = require("@google-cloud/storage");
 require('dotenv').config({ path: '.env.local' });
 
 async function diagnose() {
-  const BUCKET_NAME = "truesource-official-registry";
-  const saJson = process.env.GCP_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+  const BUCKET_NAME = "official-registry";
+  const saJson = process.env.COMPUTE_SERVICE_ACCOUNT;
   
   console.log("--- GCS Diagnosis Start ---");
   console.log(`Target Bucket: ${BUCKET_NAME}`);

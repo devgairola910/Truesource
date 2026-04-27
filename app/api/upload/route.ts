@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to GCS bucket: truesource-official-registry
+    // Upload to GCS bucket: official-registry
     const publicUrl = await uploadToGCS(buffer, destination, file.type);
 
     return NextResponse.json({

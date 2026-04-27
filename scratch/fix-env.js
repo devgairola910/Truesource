@@ -1,39 +1,23 @@
 const fs = require('fs');
-const path = require('path');
+const content = fs.readFileSync('.env.local', 'utf-8');
 
-const envPath = path.join(process.cwd(), '.env.local');
+// Find FIREBASE_SERVICE_ACCOUNT and COMPUTE_SERVICE_ACCOUNT
+const firebaseMatch = content.match(/FIREBASE_SERVICE_ACCOUNT=({[\s\S]*?\n})/);
+const computeMatch = content.match(/COMPUTE_SERVICE_ACCOUNT=({[\s\S]*?\n})/);
 
-if (!fs.existsSync(envPath)) {
-  console.error('.env.local not found');
-  process.exit(1);
+let newContent = content;
+
+if (firebaseMatch) {
+  const jsonStr = firebaseMatch[1];
+  const obj = JSON.parse(jsonStr);
+  newContent = newContent.replace(firebaseMatch[0], `FIREBASE_SERVICE_ACCOUNT='${JSON.stringify(obj)}'`);
 }
 
-const content = fs.readFileSync(envPath, 'utf8');
-const lines = content.split('\n');
-
-let newContent = '';
-let inJson = false;
-let jsonBuffer = '';
-let currentKey = '';
-
-for (const line of lines) {
-  if (line.includes('={') && !inJson) {
-    inJson = true;
-    const parts = line.split('=');
-    currentKey = parts[0];
-    jsonBuffer = '{';
-  } else if (inJson) {
-    jsonBuffer += line.trim();
-    if (line.trim() === '}') {
-      // End of JSON
-      newContent += `${currentKey}='${jsonBuffer}'\n`;
-      inJson = false;
-      jsonBuffer = '';
-    }
-  } else if (line.trim()) {
-    newContent += line + '\n';
-  }
+if (computeMatch) {
+  const jsonStr = computeMatch[1];
+  const obj = JSON.parse(jsonStr);
+  newContent = newContent.replace(computeMatch[0], `COMPUTE_SERVICE_ACCOUNT='${JSON.stringify(obj)}'`);
 }
 
-fs.writeFileSync(envPath, newContent);
-console.log('.env.local has been reformatted to single-line JSON strings.');
+fs.writeFileSync('.env.local', newContent);
+console.log('Fixed .env.local');
