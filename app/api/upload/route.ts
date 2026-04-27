@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { uploadToGCS, getSignedUploadUrl } from "@/lib/gcs";
+import { embedFingerprint, generatePerceptualHash } from "@/lib/fingerprint";
+import { randomUUID } from "crypto";
+import { requireAuth } from "@/lib/backend/http";
 
 /**
  * GET /api/upload?fileName=...&contentType=...
  * Returns a signed URL for direct client-to-GCS upload.
  */
 export async function GET(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const fileName = searchParams.get("fileName");
@@ -48,6 +56,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  console.log("POST /api/upload: Received request");
+  const auth = await requireAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -74,17 +88,36 @@ export async function POST(request: Request) {
     // Read file into buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    let processedBuffer: Buffer = buffer;
+
+    // Process media (Fingerprinting & Hashing)
+    let fingerprintId = null;
+    let pHash = null;
+
+    if (isImage) {
+      try {
+        fingerprintId = `FP-${randomUUID().slice(0, 8)}`;
+        pHash = await generatePerceptualHash(buffer);
+        
+        console.log(`Server: Embedding fingerprint ${fingerprintId} and generating pHash ${pHash}`);
+        processedBuffer = await embedFingerprint(buffer, fingerprintId);
+      } catch (err) {
+        console.error("Fingerprinting failed, uploading original:", err);
+      }
+    }
 
     // Upload to GCS bucket: official-registry
-    console.log(`Server: Uploading ${file.name} (${file.size} bytes) to ${destination}`);
-    const publicUrl = await uploadToGCS(buffer, destination, file.type);
+    console.log(`Server: Uploading ${file.name} (${processedBuffer.length} bytes) to ${destination}`);
+    const publicUrl = await uploadToGCS(processedBuffer, destination, file.type);
     console.log(`Server: Upload successful: ${publicUrl}`);
 
     return NextResponse.json({
       assetId: `AST-${Date.now()}`,
+      fingerprintId,
+      pHash,
       fileName: file.name,
       url: publicUrl,
-      size: file.size,
+      size: processedBuffer.length,
       success: true,
     });
   } catch (error) {

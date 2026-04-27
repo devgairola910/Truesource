@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FileUploader } from "@/components/upload/file-uploader";
 import { UploadFileItem } from "@/lib/upload";
+import { getSession } from "@/lib/auth-client";
 
 type UploadStep = "files" | "metadata" | "protection" | "review";
 const steps: { id: UploadStep; label: string }[] = [
@@ -23,8 +25,52 @@ export default function UploadPage() {
   const [distribution, setDistribution] = useState("");
   const [watermark, setWatermark] = useState(true);
   const [fingerprint, setFingerprint] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const currentIndex = steps.findIndex((s) => s.id === step);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const session = getSession();
+      
+      // Register each file as an asset
+      for (const fileItem of files) {
+        if (fileItem.status !== "done") continue;
+
+        const res = await fetch("/api/assets", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.sessionToken || ""}`
+          },
+          body: JSON.stringify({
+            title: title || fileItem.name,
+            kind: fileItem.mediaType,
+            rightsOwner: owner,
+            distributedTo: distribution,
+            url: fileItem.url,
+            fingerprintId: fileItem.fingerprintId,
+            pHash: fileItem.pHash,
+          }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const errorMessage = errorData.error || errorData.message || "Failed to register asset";
+          throw new Error(errorMessage);
+        }
+      }
+
+      router.push("/dashboard/assets");
+    } catch (err) {
+      console.error(err);
+      alert("Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const allFilesDone = files.length > 0 && files.every(f => f.status === "done");
 
@@ -156,9 +202,9 @@ export default function UploadPage() {
             Continue →
           </Button>
         ) : (
-          <Link href="/dashboard/assets">
-            <Button>Submit & Process</Button>
-          </Link>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Processing..." : "Submit & Process"}
+          </Button>
         )}
       </div>
     </div>

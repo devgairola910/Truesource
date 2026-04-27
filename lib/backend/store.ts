@@ -139,7 +139,10 @@ export async function addAsset(input: CreateAssetInput) {
     kind: input.kind,
     rightsOwner: input.rightsOwner.trim(),
     distributedTo: input.distributedTo.trim(),
-    status: "fingerprinting" as const,
+    url: input.url ?? null,
+    fingerprintId: input.fingerprintId ?? null,
+    pHash: input.pHash ?? null,
+    status: (input.fingerprintId || input.pHash) ? "protected" : ("fingerprinting" as const),
     lastUpdated: "just now",
   };
 

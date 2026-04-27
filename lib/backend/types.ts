@@ -69,6 +69,9 @@ export type CreateAssetInput = {
   kind: AssetRecord["kind"];
   rightsOwner: string;
   distributedTo: string;
+  url?: string;
+  fingerprintId?: string | null;
+  pHash?: string | null;
 };
 
 export type CreateWhitelistInput = {

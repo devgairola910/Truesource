@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPercent } from "@/lib/utils";
 import type { AlertRecord, KpiRecord } from "@/lib/mock-data";
+import { getSession } from "@/lib/auth-client";
 
 const trendIcon = {
   up: "↑",
@@ -26,10 +27,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
+      const session = getSession();
+      const headers = {
+        "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+      };
+
       try {
         const [kpiRes, dashboardRes] = await Promise.all([
-          fetch("/api/kpis"),
-          fetch("/api/dashboard")
+          fetch("/api/kpis", { headers }),
+          fetch("/api/dashboard", { headers })
         ]);
         
         const kpiData = await kpiRes.json();

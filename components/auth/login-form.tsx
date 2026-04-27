@@ -32,13 +32,15 @@ export function LoginForm({ requestedRedirect }: LoginFormProps) {
     try {
       const userCredential = await login(email, password);
       const fbUser = userCredential.user;
+      const idToken = await fbUser.getIdToken();
 
       setSession({
         name: fbUser.displayName || email.split('@')[0],
         email: fbUser.email || email,
-        company: "Company", // Placeholder as Firebase doesn't track this by default
+        company: "Company",
         createdAt: new Date().toISOString(),
         sessionToken: fbUser.uid,
+        idToken: idToken,
       });
 
       const destination = requestedRedirect || getLastVisitedPath() || "/dashboard";

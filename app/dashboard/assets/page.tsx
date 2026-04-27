@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import type { AssetRecord } from "@/lib/mock-data";
+import { getSession } from "@/lib/auth-client";
 
 type ViewMode = "grid" | "list";
 
@@ -22,8 +23,13 @@ export default function AssetsPage() {
 
   useEffect(() => {
     async function fetchAssets() {
+      const session = getSession();
       try {
-        const res = await fetch("/api/assets");
+        const res = await fetch("/api/assets", {
+          headers: {
+            "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+          }
+        });
         const data = await res.json();
         setAssets(data.assets || []);
       } catch (err) {

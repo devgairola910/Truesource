@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const scans = [
   { id: "SCAN-847", status: "completed", pages: "12,400", matches: 3, started: "28m ago", duration: "4m 12s" },
@@ -15,9 +16,14 @@ const scans = [
 export default function ScansPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-strong)]">Scan Runs</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Web scanning history and results</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-strong)]">Scan Runs</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Web scanning history and results</p>
+        </div>
+        <Link href="/dashboard/scans/leak-check">
+          <Button>Deep Match Leak Check</Button>
+        </Link>
       </div>
 
       <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] overflow-hidden">

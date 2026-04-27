@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     user: {
       name: auth.user.name,
       email: auth.user.email,
-      company: auth.user.company,
+      company: "Company", // Placeholder
     },
   });
 }
@@ -22,6 +22,8 @@ export async function DELETE(request: Request) {
     return jsonError("Session is already invalid.", 200);
   }
 
+  // deleteSession is Firestore-based, we can keep it as a cleanup if needed
+  // but with ID Tokens, logout is primarily client-side.
   await deleteSession(auth.token);
   return jsonOk({ message: "Logged out successfully." });
 }

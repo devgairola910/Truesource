@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatPercent } from "@/lib/utils";
 import type { AlertRecord } from "@/lib/mock-data";
+import { getSession } from "@/lib/auth-client";
 
 const savedViews = [
   { id: "all", label: "All Incidents" },
@@ -26,8 +27,13 @@ export default function IncidentsPage() {
 
   useEffect(() => {
     async function fetchAlerts() {
+      const session = getSession();
       try {
-        const res = await fetch("/api/alerts");
+        const res = await fetch("/api/alerts", {
+          headers: {
+            "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+          }
+        });
         const data = await res.json();
         setAlerts(data.alerts || []);
       } catch (err) {

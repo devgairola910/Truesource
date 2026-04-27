@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getSession,
-  getUserById,
-} from "@/lib/backend/store";
+import { auth as adminAuth } from "@/lib/firebase-admin";
 
 export function jsonOk<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data, {
@@ -17,47 +14,43 @@ export function jsonError(message: string, status = 400) {
 
 export function extractBearerToken(request: Request) {
   const header = request.headers.get("authorization");
-  if (!header) {
-    return null;
-  }
+  if (!header) return null;
 
   const [scheme, token] = header.split(" ");
-  if (scheme?.toLowerCase() !== "bearer" || !token) {
-    return null;
-  }
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
 
   return token.trim();
 }
 
 export async function requireAuth(request: Request) {
   const token = extractBearerToken(request);
-  if (!token) {
+  
+  if (!token || token === "null" || token === "undefined") {
     return {
       ok: false as const,
-      response: jsonError("Authorization token is missing.", 401),
+      response: jsonError("Authorization token is invalid or missing.", 401),
     };
   }
 
-  const session = await getSession(token);
-  if (!session) {
+  try {
+    // Verify the Firebase ID Token
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    
+    return {
+      ok: true as const,
+      user: {
+        id: decodedToken.uid,
+        email: decodedToken.email || "",
+        name: (decodedToken.name as string) || (decodedToken.email?.split("@")[0] as string) || "User",
+      },
+      decodedToken,
+      token,
+    };
+  } catch (err: any) {
+    console.error("requireAuth: Token verification failed:", err.code, err.message);
     return {
       ok: false as const,
-      response: jsonError("Session is invalid or expired.", 401),
+      response: jsonError(`Authentication failed: ${err.message}`, 401),
     };
   }
-
-  const user = await getUserById(session.userId);
-  if (!user) {
-    return {
-      ok: false as const,
-      response: jsonError("Session user no longer exists.", 401),
-    };
-  }
-
-  return {
-    ok: true as const,
-    user,
-    session,
-    token,
-  };
 }

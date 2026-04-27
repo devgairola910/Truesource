@@ -41,7 +41,13 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
         (progress) => updateItem(item.id, { progress })
       );
 
-      updateItem(item.id, { status: "done", progress: 100, url: result.url });
+      updateItem(item.id, { 
+        status: "done", 
+        progress: 100, 
+        url: result.url,
+        fingerprintId: (result as any).fingerprintId,
+        pHash: (result as any).pHash,
+      });
       addToast({ type: "success", title: "Upload Complete", message: `Successfully uploaded ${item.name}` });
 
     } catch (err) {

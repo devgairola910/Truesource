@@ -7,6 +7,9 @@ type AssetPayload = {
   kind?: unknown;
   rightsOwner?: unknown;
   distributedTo?: unknown;
+  url?: unknown;
+  fingerprintId?: unknown;
+  pHash?: unknown;
 };
 
 export async function GET(request: Request) {
@@ -35,9 +38,12 @@ export async function POST(request: Request) {
   const kind = toNonEmptyString(body.kind);
   const rightsOwner = toNonEmptyString(body.rightsOwner);
   const distributedTo = toNonEmptyString(body.distributedTo);
+  const url = typeof body.url === "string" ? body.url : undefined;
+  const fingerprintId = typeof body.fingerprintId === "string" ? body.fingerprintId : undefined;
+  const pHash = typeof body.pHash === "string" ? body.pHash : undefined;
 
-  if (!title || !kind || !rightsOwner || !distributedTo) {
-    return jsonError("title, kind, rightsOwner, and distributedTo are required.", 400);
+  if (!title || !kind || !rightsOwner) {
+    return jsonError("title, kind, and rightsOwner are required.", 400);
   }
 
   if (kind !== "image" && kind !== "video") {
@@ -49,6 +55,9 @@ export async function POST(request: Request) {
     kind,
     rightsOwner,
     distributedTo,
+    url,
+    fingerprintId,
+    pHash,
   });
 
   return jsonOk({ asset }, { status: 201 });

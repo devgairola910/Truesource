@@ -8,6 +8,9 @@ export type AssetRecord = {
   distributedTo: string;
   status: "protected" | "fingerprinting";
   lastUpdated: string;
+  url?: string;
+  fingerprintId?: string | null;
+  pHash?: string | null;
 };
 
 export type CandidateRecord = {

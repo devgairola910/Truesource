@@ -1,9 +1,7 @@
 /**
  * Upload configuration, validation, and API helpers.
- *
- * Centralises all file-upload logic so both the full Upload Wizard page
- * and the Quick Upload modal in the topbar share identical behaviour.
  */
+import { getSession } from "@/lib/auth-client";
 
 // ─── Accepted file types ────────────────────────────────────────────
 export const ACCEPTED_IMAGE_TYPES = [
@@ -87,6 +85,8 @@ export type UploadFileItem = {
   status: UploadStatus;
   url?: string;
   error?: string;
+  fingerprintId?: string | null;
+  pHash?: string | null;
 };
 
 
@@ -180,6 +180,7 @@ async function uploadViaDirectPost(
   signal?: AbortSignal
 ): Promise<{ assetId: string; fileName: string; url?: string }> {
   return new Promise((resolve, reject) => {
+    const session = getSession();
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append("file", file);
@@ -229,6 +230,10 @@ async function uploadViaDirectPost(
     }
 
     xhr.open("POST", "/api/upload");
+    const token = session?.idToken || session?.sessionToken;
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
     xhr.send(formData);
   });
 }
@@ -243,10 +248,16 @@ async function uploadViaSignedUrl(
   signal?: AbortSignal
 ): Promise<{ assetId: string; fileName: string; url?: string }> {
   try {
+    const session = getSession();
     // 1. Get signed URL
     const signRes = await fetch(
       `/api/upload?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`,
-      { signal }
+      { 
+        signal,
+        headers: {
+          "Authorization": `Bearer ${session?.sessionToken || ""}`
+        }
+      }
     );
     
     if (!signRes.ok) {
