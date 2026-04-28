@@ -35,6 +35,7 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+
       // Register each file as an asset
       for (const fileItem of files) {
         if (fileItem.status !== "done") continue;
@@ -43,7 +44,7 @@ export default function UploadPage() {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.idToken || ""}`
+
           },
           body: JSON.stringify({
             title: title || fileItem.name,
