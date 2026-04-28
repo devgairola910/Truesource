@@ -125,8 +125,7 @@ export async function getUserById(id: string) {
 export async function listAssets(userId: string) {
   const snapshot = await db.collection(ASSETS_COL).where("userId", "==", userId).get();
   if (snapshot.empty) {
-    // If empty in cloud, fallback to local seeds if needed (for initial dev)
-    return seedAssets;
+    return [];
   }
   const assets = snapshot.docs.map(doc => doc.data() as any);
   return assets.sort((a, b) => b.id.localeCompare(a.id));
@@ -154,13 +153,13 @@ export async function addAsset(input: CreateAssetInput) {
 
 export async function listCandidates() {
   const snapshot = await db.collection(CANDIDATES_COL).get();
-  if (snapshot.empty) return seedCandidates;
+  if (snapshot.empty) return [];
   return snapshot.docs.map(doc => doc.data());
 }
 
 export async function listAlerts() {
   const snapshot = await db.collection(ALERTS_COL).orderBy("id", "desc").get();
-  if (snapshot.empty) return seedAlerts;
+  if (snapshot.empty) return [];
   return snapshot.docs.map(doc => doc.data());
 }
 
@@ -176,7 +175,7 @@ export async function updateAlertStatus(alertId: string, input: UpdateAlertStatu
 
 export async function listWhitelistDomains() {
   const snapshot = await db.collection(WHITELIST_COL).get();
-  if (snapshot.empty) return seedWhitelist;
+  if (snapshot.empty) return [];
   return snapshot.docs.map(doc => doc.data());
 }
 
@@ -218,7 +217,7 @@ export async function removeWhitelistDomain(domain: string) {
 
 export async function listKpis() {
   const snapshot = await db.collection(KPIS_COL).get();
-  if (snapshot.empty) return seedKpis;
+  if (snapshot.empty) return [];
   return snapshot.docs.map(doc => doc.data());
 }
 
