@@ -3,6 +3,19 @@
  */
 import { getSession } from "@/lib/auth-client";
 
+async function getAuthToken() {
+  try {
+    const { auth } = await import("@/lib/firebase");
+    if (auth.currentUser) {
+      return await auth.currentUser.getIdToken(true);
+    }
+  } catch (e) {
+    console.warn("Failed to get fresh Firebase token", e);
+  }
+  const session = getSession();
+  return session?.idToken || session?.sessionToken;
+}
+
 // ─── Accepted file types ────────────────────────────────────────────
 export const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -179,8 +192,9 @@ async function uploadViaDirectPost(
   onProgress: (pct: number) => void,
   signal?: AbortSignal
 ): Promise<{ assetId: string; fileName: string; url?: string }> {
+  const token = await getAuthToken();
+
   return new Promise((resolve, reject) => {
-    const session = getSession();
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append("file", file);
@@ -230,7 +244,6 @@ async function uploadViaDirectPost(
     }
 
     xhr.open("POST", "/api/upload");
-    const token = session?.idToken || session?.sessionToken;
     if (token) {
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     }
@@ -248,14 +261,14 @@ async function uploadViaSignedUrl(
   signal?: AbortSignal
 ): Promise<{ assetId: string; fileName: string; url?: string }> {
   try {
-    const session = getSession();
+    const token = await getAuthToken();
     // 1. Get signed URL
     const signRes = await fetch(
       `/api/upload?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`,
       { 
         signal,
         headers: {
-          "Authorization": `Bearer ${session?.sessionToken || ""}`
+          "Authorization": `Bearer ${token || ""}`
         }
       }
     );

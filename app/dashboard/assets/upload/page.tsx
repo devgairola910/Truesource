@@ -34,6 +34,15 @@ export default function UploadPage() {
     setIsSubmitting(true);
     try {
       const session = getSession();
+      let token = session?.idToken || session?.sessionToken;
+      try {
+        const { auth } = await import("@/lib/firebase");
+        if (auth.currentUser) {
+          token = await auth.currentUser.getIdToken(true);
+        }
+      } catch (e) {
+        console.warn("Failed to get fresh Firebase token", e);
+      }
       
       // Register each file as an asset
       for (const fileItem of files) {
@@ -43,7 +52,7 @@ export default function UploadPage() {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.sessionToken || ""}`
+            "Authorization": `Bearer ${token || ""}`
           },
           body: JSON.stringify({
             title: title || fileItem.name,
