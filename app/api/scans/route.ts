@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import { extractFingerprint, generatePerceptualHash } from "@/lib/fingerprint";
+import { extractFingerprint, generatePerceptualHash, getHammingDistance } from "@/lib/fingerprint";
 import { requireAuth } from "@/lib/backend/http";
 
 const ASSETS_COL = "assets";
 
-function getHammingDistance(hex1: string, hex2: string): number {
-  if (!hex1 || !hex2) return 64;
-  let xor;
-  try {
-    xor = BigInt("0x" + hex1) ^ BigInt("0x" + hex2);
-  } catch {
-    return 64;
-  }
-  let distance = 0;
-  while (xor > 0n) {
-    distance += Number(xor & 1n);
-    xor >>= 1n;
-  }
-  return distance;
-}
+
 
 export async function POST(request: Request) {
   const auth = await requireAuth(request);

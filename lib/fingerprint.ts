@@ -144,22 +144,21 @@ function bitsToString(bits: number[]): string {
 }
 
 /**
- * Calculates the Hamming distance between two 16-character hex strings (64-bit hashes).
+ * Calculates the Hamming distance between two hex strings (64-bit hashes).
  * Returns the number of differing bits.
  */
-export function hammingDistance(hex1: string, hex2: string): number {
-  if (hex1.length !== hex2.length) return 64; // Max distance on format error
-
+export function getHammingDistance(hex1: string, hex2: string): number {
+  if (!hex1 || !hex2) return 64;
+  let xor;
+  try {
+    xor = BigInt("0x" + hex1) ^ BigInt("0x" + hex2);
+  } catch {
+    return 64;
+  }
   let distance = 0;
-  for (let i = 0; i < hex1.length; i++) {
-    const val1 = parseInt(hex1[i], 16);
-    const val2 = parseInt(hex2[i], 16);
-    let xor = val1 ^ val2;
-    // Count set bits (Brian Kernighan's algorithm)
-    while (xor > 0) {
-      distance += 1;
-      xor &= xor - 1;
-    }
+  while (xor > 0n) {
+    distance += Number(xor & 1n);
+    xor >>= 1n;
   }
   return distance;
 }

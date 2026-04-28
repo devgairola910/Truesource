@@ -1,6 +1,6 @@
 import { jsonError, jsonOk, requireAuth } from "@/lib/backend/http";
 import { getAllAssets, createAlert } from "@/lib/backend/store";
-import { generatePerceptualHash, hammingDistance } from "@/lib/fingerprint";
+import { generatePerceptualHash, getHammingDistance } from "@/lib/fingerprint";
 import type { AlertRecord } from "@/lib/types";
 
 /**
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       // 4. Compare against Registry
       for (const asset of protectedAssets) {
         // A distance of <= 10 bits out of 64 indicates high visual similarity
-        const distance = hammingDistance(candidateHash, asset.pHash);
+        const distance = getHammingDistance(candidateHash, asset.pHash);
         
         if (distance <= 10) {
           // WE FOUND A MATCH!
