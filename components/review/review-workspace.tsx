@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Chip } from "@/components/ui/chip";
-import type { AlertRecord, AlertStatus } from "@/lib/mock-data";
+import type { AlertRecord, AlertStatus } from "@/lib/types";
 
 type ReviewWorkspaceProps = {
   initialAlerts: AlertRecord[];

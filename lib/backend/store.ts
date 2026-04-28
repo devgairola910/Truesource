@@ -1,13 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { db } from "@/lib/firebase-admin";
 import {
-  alerts as seedAlerts,
-  assets as seedAssets,
-  candidates as seedCandidates,
-  kpis as seedKpis,
-  whitelistDomains as seedWhitelist,
   type AlertRecord,
-} from "@/lib/mock-data";
+} from "@/lib/types";
 import type {
   AuthUser,
   ContactInquiry,
@@ -64,6 +59,17 @@ export async function createUser(input: CreateUserInput) {
     ok: true as const,
     user,
   };
+}
+
+export async function listUsers() {
+  const snapshot = await db.collection(USERS_COL).get();
+  if (snapshot.empty) return [];
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    // Don't leak passwords
+    const { passwordHash, ...safeUser } = data;
+    return safeUser;
+  });
 }
 
 export async function authenticateUser(input: LoginInput) {
@@ -187,14 +193,26 @@ export async function getAllAssets() {
   return snapshot.docs.map(doc => doc.data() as any);
 }
 
-export async function updateAlertStatus(alertId: string, input: UpdateAlertStatusInput) {
+export async function getAssetById(id: string) {
+  const doc = await db.collection(ASSETS_COL).doc(id).get();
+  if (!doc.exists) return undefined;
+  return doc.data();
+}
+
+export async function updateAlertStatus(alertId: string, input: UpdateAlertStatusInput & { auditEntry?: any }) {
   const ref = db.collection(ALERTS_COL).doc(alertId);
   const doc = await ref.get();
   
   if (!doc.exists) return null;
 
-  await ref.update({ status: input.status });
-  return { ...(doc.data() as any), status: input.status };
+  const updateData: any = { status: input.status };
+  if (input.auditEntry) {
+    const currentLog = (doc.data() as any).auditLog || [];
+    updateData.auditLog = [...currentLog, input.auditEntry];
+  }
+
+  await ref.update(updateData);
+  return { ...(doc.data() as any), ...updateData };
 }
 
 export async function listWhitelistDomains() {

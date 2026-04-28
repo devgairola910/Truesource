@@ -5,7 +5,7 @@ import type {
   CandidateRecord,
   KpiRecord,
   WhitelistDomain,
-} from "@/lib/mock-data";
+} from "@/lib/types";
 
 export type AuthUser = {
   id: string;

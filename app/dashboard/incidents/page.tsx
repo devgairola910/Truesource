@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatPercent } from "@/lib/utils";
-import type { AlertRecord } from "@/lib/mock-data";
+import type { AlertRecord } from "@/lib/types";
 import { getSession, onAuthChange } from "@/lib/auth-client";
 import { useSyncExternalStore } from "react";
 

@@ -1,5 +1,5 @@
 import { Chip } from "@/components/ui/chip";
-import type { AssetRecord } from "@/lib/mock-data";
+import type { AssetRecord } from "@/lib/types";
 
 type AssetTableProps = {
   rows: AssetRecord[];

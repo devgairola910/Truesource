@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPercent } from "@/lib/utils";
-import type { AlertRecord, KpiRecord } from "@/lib/mock-data";
+import type { AlertRecord, KpiRecord } from "@/lib/types";
 import { getSession, onAuthChange } from "@/lib/auth-client";
 import { useSyncExternalStore } from "react";
 
@@ -46,30 +46,6 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData();
   }, [session?.idToken]);
-
-  const [isScanningInternet, setIsScanningInternet] = useState(false);
-
-  const runAutonomousScan = async () => {
-    if (!session?.idToken) return;
-    setIsScanningInternet(true);
-    try {
-      const res = await fetch("/api/scans/run", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${session.idToken}` }
-      });
-      const result = await res.json();
-      alert(`${result.message}\nCandidates Scanned: ${result.scannedCandidates}\nNew Incidents Found: ${result.matches}`);
-      if (result.matches > 0) {
-        // Refresh dashboard data to show new alerts
-        await fetchData();
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Failed to run autonomous scan.");
-    } finally {
-      setIsScanningInternet(false);
-    }
-  };
 
   if (isLoading || !data) {
     return (
@@ -210,17 +186,16 @@ export default function DashboardPage() {
                   <span className="text-xs font-black uppercase tracking-widest">Instant Leak Check</span>
                 </Button>
               </Link>
-              <Button 
-                variant="secondary" 
-                className="w-full justify-start gap-3 h-12 rounded-xl transition-all hover:scale-[1.01] bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] border-none"
-                onClick={runAutonomousScan}
-                disabled={isScanningInternet}
-              >
-                <span className="text-lg">{isScanningInternet ? "⏳" : "🌐"}</span>
-                <span className="text-xs font-black uppercase tracking-widest">
-                  {isScanningInternet ? "Scanning Web..." : "Run Autonomous Web Scan"}
-                </span>
-              </Button>
+              <Link href="/dashboard/scans/autonomous">
+                <Button 
+                  className="w-full justify-start gap-3 h-12 rounded-xl transition-all hover:scale-[1.01] bg-[var(--success)] text-white hover:bg-[#047857] border-none shadow-[0_4px_14px_0_rgba(5,150,105,0.3)]"
+                >
+                  <span className="text-lg">🌐</span>
+                  <span className="text-xs font-black uppercase tracking-widest">
+                    Autonomous Web Scan
+                  </span>
+                </Button>
+              </Link>
             </div>
           </div>
 

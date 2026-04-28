@@ -1,5 +1,5 @@
 import { Chip } from "@/components/ui/chip";
-import type { KpiRecord } from "@/lib/mock-data";
+import type { KpiRecord } from "@/lib/types";
 
 type KpiGridProps = {
   items: KpiRecord[];
