@@ -19,7 +19,6 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
   const session = getSession();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -70,14 +69,7 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
 
       {/* Right actions */}
       <div className="flex items-center gap-2">
-        {/* Quick upload */}
-        <button
-          onClick={() => setUploadModalOpen(true)}
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[var(--brand)] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload
-        </button>
+
 
         {/* Notifications */}
         <button className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-1)] transition" aria-label="Notifications">
@@ -135,15 +127,7 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
         </div>
       </div>
 
-      {/* Quick Upload Modal */}
-      <Modal
-        open={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
-        title="Quick Upload"
-        description="Select files to upload and protect instantly."
-      >
-        <FileUploader />
-      </Modal>
+
     </header>
   );
 }
