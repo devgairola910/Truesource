@@ -1,26 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
+import { getSession } from "@/lib/auth-client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Role = "admin" | "reviewer" | "analyst" | "viewer";
-const members = [
-  { name: "Sarah Chen", email: "sarah@apex.com", role: "admin" as Role, status: "active", lastActive: "2m ago" },
-  { name: "Marcus Johnson", email: "marcus@apex.com", role: "reviewer" as Role, status: "active", lastActive: "15m ago" },
-  { name: "Emily Rodriguez", email: "emily@apex.com", role: "analyst" as Role, status: "active", lastActive: "1h ago" },
-  { name: "Alex Kim", email: "alex@apex.com", role: "reviewer" as Role, status: "invited", lastActive: "—" },
-  { name: "Jordan Lee", email: "jordan@apex.com", role: "viewer" as Role, status: "active", lastActive: "3d ago" },
-];
+
+interface Member {
+  name: string;
+  email: string;
+  role: Role;
+  status: string;
+  lastActive: string;
+}
 
 const roleColors: Record<Role, string> = { admin: "danger", reviewer: "warning", analyst: "info", viewer: "default" };
 
 export default function TeamPage() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("reviewer");
+
+  useEffect(() => {
+    async function fetchTeam() {
+      const session = getSession();
+      if (!session?.idToken) return;
+      try {
+        const res = await fetch("/api/team", {
+          headers: { "Authorization": `Bearer ${session.idToken}` }
+        });
+        const data = await res.json();
+        setMembers(data.members || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchTeam();
+  }, []);
+
+  if (isLoading) {
+    return <div className="space-y-6"><Skeleton className="h-10 w-48" /><Skeleton className="h-64 w-full" /></div>;
+  }
 
   return (
     <div className="space-y-6">

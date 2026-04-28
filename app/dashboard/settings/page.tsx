@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
+import { getSession } from "@/lib/auth-client";
 
 export default function SettingsPage() {
   const [tab, setTab] = useState("organization");
@@ -97,31 +98,95 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {tab === "domains" && (
-        <div className="max-w-2xl space-y-4">
-          <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 space-y-4">
-            <h3 className="text-base font-semibold text-[var(--text-strong)]">Allowlisted Domains</h3>
-            <p className="text-sm text-[var(--text-muted)]">Domains added here will not trigger incident alerts.</p>
-            {[
-              { domain: "partner-broadcast.tv", reason: "Contracted highlights distribution" },
-              { domain: "official-club-app.io", reason: "Owned channel" },
-              { domain: "sponsor-content.net", reason: "Approved sponsor co-marketing" },
-            ].map((d) => (
-              <div key={d.domain} className="flex items-center gap-3 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-3">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-[var(--text-strong)]">{d.domain}</p>
-                  <p className="text-xs text-[var(--text-soft)]">{d.reason}</p>
-                </div>
-                <Button size="sm" variant="ghost">Remove</Button>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <input type="text" placeholder="Enter domain to allowlist" className="flex-1 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-2.5 text-sm input-focus-ring" />
-              <Button size="sm">Add Domain</Button>
+      {tab === "domains" && <WhitelistTab />}
+    </div>
+  );
+}
+
+function WhitelistTab() {
+  const [domains, setDomains] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newDomain, setNewDomain] = useState("");
+  const [newReason, setNewReason] = useState("");
+
+  const fetchDomains = async () => {
+    const session = getSession();
+    if (!session?.idToken) return;
+    try {
+      const res = await fetch("/api/whitelist", {
+        headers: { "Authorization": `Bearer ${session.idToken}` }
+      });
+      const data = await res.json();
+      setDomains(data.domains || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDomains();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!newDomain || !newReason) return;
+    const session = getSession();
+    const res = await fetch("/api/whitelist", {
+      method: "POST",
+      headers: { 
+        "Authorization": `Bearer ${session?.idToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ domain: newDomain, owner: "Internal", reason: newReason })
+    });
+    if (res.ok) {
+      setNewDomain("");
+      setNewReason("");
+      fetchDomains();
+    }
+  };
+
+  const handleRemove = async (domain: string) => {
+    const session = getSession();
+    await fetch(`/api/whitelist?domain=${domain}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${session?.idToken}` }
+    });
+    fetchDomains();
+  };
+
+  if (isLoading) return <div className="p-8 text-center text-[var(--text-soft)]">Loading allowlist...</div>;
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 space-y-4">
+        <h3 className="text-base font-semibold text-[var(--text-strong)]">Allowlisted Domains</h3>
+        <p className="text-sm text-[var(--text-muted)]">Domains added here will not trigger incident alerts.</p>
+        
+        {domains.length === 0 ? (
+          <div className="py-8 text-center text-sm text-[var(--text-soft)] border border-dashed border-[var(--stroke)] rounded-xl">
+            No domains in allowlist yet.
+          </div>
+        ) : domains.map((d) => (
+          <div key={d.domain} className="flex items-center gap-3 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-[var(--text-strong)]">{d.domain}</p>
+              <p className="text-xs text-[var(--text-soft)]">{d.reason}</p>
             </div>
+            <Button size="sm" variant="ghost" onClick={() => handleRemove(d.domain)}>Remove</Button>
+          </div>
+        ))}
+
+        <div className="space-y-2 pt-4 border-t border-[var(--stroke)]">
+          <p className="text-xs font-bold text-[var(--text-strong)] uppercase tracking-wider">Add Domain</p>
+          <div className="flex gap-2">
+            <input type="text" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} placeholder="Domain (e.g. youtube.com)" className="flex-1 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-2.5 text-sm input-focus-ring" />
+            <input type="text" value={newReason} onChange={(e) => setNewReason(e.target.value)} placeholder="Reason" className="flex-1 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-2.5 text-sm input-focus-ring" />
+            <Button size="sm" onClick={handleAdd}>Add</Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

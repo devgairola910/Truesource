@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Chip } from "@/components/ui/chip";
-import type { WhitelistDomain } from "@/lib/mock-data";
+import type { WhitelistDomain } from "@/lib/types";
 
 type WhitelistManagerProps = {
   initialDomains: WhitelistDomain[];

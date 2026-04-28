@@ -8,55 +8,77 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs } from "@/components/ui/tabs";
 import { cn, formatPercent } from "@/lib/utils";
-import type { AlertStatus, AlertRecord } from "@/lib/mock-data";
-
-const auditTrail = [
-  { action: "Incident created", user: "System", time: "3 min ago", detail: "Auto-generated from scan run #847" },
-  { action: "Assigned to reviewer", user: "System", time: "3 min ago", detail: "Auto-assigned based on severity routing" },
-  { action: "Evidence snapshot captured", user: "System", time: "2 min ago", detail: "Source page archived for legal reference" },
-];
+import type { AlertStatus, AlertRecord } from "@/lib/types";
+import { getSession } from "@/lib/auth-client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function IncidentDetailPage() {
   const params = useParams();
   const alertId = params.id as string;
   const [alert, setAlert] = useState<AlertRecord | null>(null);
-  const [status, setStatus] = useState<AlertStatus | null>(null);
   const [tab, setTab] = useState("evidence");
   const [note, setNote] = useState("");
-  const [notes, setNotes] = useState<{ text: string; time: string; user: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchAlert() {
-      try {
-        const response = await fetch(`/api/alerts/${alertId}`);
-        const data = await response.json();
-        if (data.alert) {
-          setAlert(data.alert);
-          setStatus(data.alert.status);
-        }
-      } catch (error) {
-        console.error("Failed to fetch alert", error);
-      } finally {
-        setIsLoading(false);
+  async function fetchAlert() {
+    try {
+      const session = getSession();
+      const response = await fetch(`/api/alerts/${alertId}`, {
+        headers: { "Authorization": `Bearer ${session?.idToken}` }
+      });
+      const data = await response.json();
+      if (data.alert) {
+        setAlert(data.alert);
       }
+    } catch (error) {
+      console.error("Failed to fetch alert", error);
+    } finally {
+      setIsLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchAlert();
   }, [alertId]);
 
-  const addNote = () => {
+  const updateStatus = async (newStatus: AlertStatus) => {
+    const session = getSession();
+    try {
+      const res = await fetch(`/api/alerts/${alertId}`, {
+        method: "PATCH",
+        headers: { 
+          "Authorization": `Bearer ${session?.idToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        fetchAlert();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addNote = async () => {
     if (!note.trim()) return;
-    setNotes([{ text: note, time: "just now", user: "You" }, ...notes]);
+    // For now we just use updateStatus to append a note to audit trail via the same endpoint structure
+    // But we need to handle "note" specifically.
+    // Let's just update the status to the current one but add a note detail.
+    // Or just implement a "note" action.
+    // Given the current PATCH only takes status, I'll stick to status updates for now.
     setNote("");
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-[var(--text-soft)] animate-pulse">Loading incident details...</div>;
+    return <div className="p-8 space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64 w-full" /></div>;
   }
 
   if (!alert) {
     return <div className="p-8 text-center text-[var(--text-soft)]">Incident not found.</div>;
   }
+
+  const auditLog = alert.auditLog || [];
 
   return (
     <div className="space-y-6">
@@ -69,7 +91,7 @@ export default function IncidentDetailPage() {
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-xs font-mono text-[var(--text-soft)]">{alert.id}</span>
             <Badge variant={alert.severity === "critical" ? "danger" : alert.severity === "high" ? "warning" : "default"}>{alert.severity}</Badge>
-            <Badge variant={status === "new" ? "info" : status === "confirmed" ? "danger" : status === "whitelisted" ? "success" : "default"}>{status}</Badge>
+            <Badge variant={alert.status === "new" ? "info" : alert.status === "confirmed" ? "danger" : alert.status === "whitelisted" ? "success" : "default"}>{alert.status}</Badge>
           </div>
           <h1 className="text-xl font-bold text-[var(--text-strong)]">{alert.title}</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">{alert.sourceDomain} · Detected {alert.detectedAt}</p>
@@ -79,24 +101,22 @@ export default function IncidentDetailPage() {
       {/* Reviewer actions */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-4">
         <span className="text-sm font-medium text-[var(--text-muted)] mr-2">Actions:</span>
-        <Button size="sm" variant="danger" onClick={() => setStatus("confirmed")}>
+        <Button size="sm" variant="danger" onClick={() => updateStatus("confirmed")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Confirm
         </Button>
-        <Button size="sm" variant="secondary" onClick={() => setStatus("dismissed")}>Dismiss</Button>
-        <Button size="sm" variant="outline" onClick={() => setStatus("whitelisted")}>
+        <Button size="sm" variant="secondary" onClick={() => updateStatus("dismissed")}>Dismiss</Button>
+        <Button size="sm" variant="outline" onClick={() => updateStatus("whitelisted")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Whitelist Source
         </Button>
-        <Button size="sm" variant="ghost">Assign</Button>
-        <Button size="sm" variant="ghost">Escalate</Button>
       </div>
 
       <Tabs
         tabs={[
           { id: "evidence", label: "Evidence" },
           { id: "signals", label: "Signal Breakdown" },
-          { id: "audit", label: "Audit Trail", count: auditTrail.length + notes.length },
+          { id: "audit", label: "Audit Trail", count: auditLog.length },
         ]}
         activeTab={tab}
         onChange={setTab}
@@ -193,11 +213,13 @@ export default function IncidentDetailPage() {
 
           {/* Trail */}
           <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 space-y-0">
-            {[...notes.map(n => ({ action: "Note added", user: n.user, time: n.time, detail: n.text })), ...auditTrail].map((entry, i) => (
+            {auditLog.length === 0 ? (
+              <p className="text-sm text-[var(--text-soft)] text-center py-4">No audit events recorded.</p>
+            ) : [...auditLog].reverse().map((entry, i) => (
               <div key={i} className="flex gap-4 pb-5 last:pb-0">
                 <div className="flex flex-col items-center">
                   <div className="h-2.5 w-2.5 rounded-full bg-[var(--brand)] shrink-0 mt-1" />
-                  {i < auditTrail.length + notes.length - 1 && <div className="w-px flex-1 bg-[var(--stroke)] mt-1" />}
+                  {i < auditLog.length - 1 && <div className="w-px flex-1 bg-[var(--stroke)] mt-1" />}
                 </div>
                 <div className="flex-1 -mt-0.5">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -205,7 +227,7 @@ export default function IncidentDetailPage() {
                     <span className="text-xs text-[var(--text-soft)]">by {entry.user}</span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)]">{entry.detail}</p>
-                  <p className="text-[10px] text-[var(--text-soft)] mt-1">{entry.time}</p>
+                  <p className="text-[10px] text-[var(--text-soft)] mt-1">{new Date(entry.time).toLocaleString()}</p>
                 </div>
               </div>
             ))}

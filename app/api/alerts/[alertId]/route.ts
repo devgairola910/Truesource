@@ -51,6 +51,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const { alertId } = await params;
   const updated = await updateAlertStatus(alertId, {
     status: status as "new" | "confirmed" | "dismissed" | "whitelisted",
+    auditEntry: {
+      action: "Status updated",
+      user: auth.user.email || "Unknown User",
+      time: new Date().toISOString(),
+      detail: `Status changed to ${status}`
+    }
   });
 
   if (!updated) {

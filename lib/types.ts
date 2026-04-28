@@ -31,6 +31,13 @@ export type EvidenceSignal = {
 
 export type AlertStatus = "new" | "confirmed" | "dismissed" | "whitelisted";
 
+export type AuditEntry = {
+  action: string;
+  user: string;
+  time: string;
+  detail: string;
+};
+
 export type AlertRecord = {
   id: string;
   title: string;
@@ -43,6 +50,7 @@ export type AlertRecord = {
   status: AlertStatus;
   evidence: EvidenceSignal[];
   recommendedAction: string;
+  auditLog?: AuditEntry[];
 };
 
 export type KpiRecord = {
@@ -58,9 +66,3 @@ export type WhitelistDomain = {
   owner: string;
   reason: string;
 };
-
-export const assets: AssetRecord[] = [];
-export const candidates: CandidateRecord[] = [];
-export const alerts: AlertRecord[] = [];
-export const kpis: KpiRecord[] = [];
-export const whitelistDomains: WhitelistDomain[] = [];

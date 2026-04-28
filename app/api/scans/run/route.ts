@@ -1,7 +1,7 @@
 import { jsonError, jsonOk, requireAuth } from "@/lib/backend/http";
 import { getAllAssets, createAlert } from "@/lib/backend/store";
 import { generatePerceptualHash, hammingDistance } from "@/lib/fingerprint";
-import type { AlertRecord } from "@/lib/mock-data";
+import type { AlertRecord } from "@/lib/types";
 
 /**
  * Autonomous Scanning Job

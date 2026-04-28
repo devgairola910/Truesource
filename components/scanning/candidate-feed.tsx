@@ -1,5 +1,5 @@
 import { Chip } from "@/components/ui/chip";
-import type { CandidateRecord } from "@/lib/mock-data";
+import type { CandidateRecord } from "@/lib/types";
 
 type CandidateFeedProps = {
   items: CandidateRecord[];

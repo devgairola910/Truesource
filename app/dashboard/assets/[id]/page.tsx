@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs } from "@/components/ui/tabs";
-import { useState } from "react";
-import { assets, alerts } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { getSession } from "@/lib/auth-client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const processingSteps = [
   { label: "Upload received", status: "done", time: "2h ago" },
@@ -29,9 +30,39 @@ const signals = [
 export default function AssetDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
-  const asset = assets.find((a) => a.id === assetId) ?? assets[0];
-  const linkedAlerts = alerts.filter((a) => a.matchedAssetId === asset.id);
+  const [data, setData] = useState<{ asset: any; linkedAlerts: any[] } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState("overview");
+
+  useEffect(() => {
+    async function fetchAsset() {
+      const session = getSession();
+      if (!session?.idToken) return;
+
+      try {
+        const res = await fetch(`/api/assets/${assetId}`, {
+          headers: { "Authorization": `Bearer ${session.idToken}` }
+        });
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Failed to fetch asset", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAsset();
+  }, [assetId]);
+
+  if (isLoading) {
+    return <div className="space-y-6"><Skeleton className="h-20 w-full" /><Skeleton className="h-[400px] w-full" /></div>;
+  }
+
+  if (!data?.asset) {
+    return <div className="p-12 text-center text-[var(--text-soft)]">Asset not found.</div>;
+  }
+
+  const { asset, linkedAlerts } = data;
 
   return (
     <div className="space-y-6">
