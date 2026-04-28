@@ -155,7 +155,7 @@ export default function LeakCheckPage() {
                       </p>
                       {result.matchPercentage !== undefined && (
                         <Badge 
-                          variant={result.found ? "success" : "secondary"} 
+                          variant={result.found ? "success" : "default"} 
                           className={cn(
                             result.found ? "bg-[var(--success)] text-white border-transparent" : "bg-[var(--surface-3)] text-[var(--text-soft)]"
                           )}
