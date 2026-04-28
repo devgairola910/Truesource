@@ -1,4 +1,4 @@
-import { updateAlertStatus } from "@/lib/backend/store";
+import { updateAlertStatus, getAlertById } from "@/lib/backend/store";
 import { jsonError, jsonOk, requireAuth } from "@/lib/backend/http";
 import { toNonEmptyString } from "@/lib/backend/validators";
 
@@ -13,6 +13,22 @@ type RouteParams = {
 };
 
 const validStatuses = new Set(["new", "confirmed", "dismissed", "whitelisted"]);
+
+export async function GET(request: Request, { params }: RouteParams) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  const { alertId } = await params;
+  const alert = await getAlertById(alertId);
+
+  if (!alert) {
+    return jsonError("Alert not found.", 404);
+  }
+
+  return jsonOk({ alert });
+}
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const auth = await requireAuth(request);
@@ -33,7 +49,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 
   const { alertId } = await params;
-  const updated = updateAlertStatus(alertId, {
+  const updated = await updateAlertStatus(alertId, {
     status: status as "new" | "confirmed" | "dismissed" | "whitelisted",
   });
 
