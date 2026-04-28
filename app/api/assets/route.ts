@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     return auth.response;
   }
 
-  return jsonOk({ assets: await listAssets() });
+  return jsonOk({ assets: await listAssets(auth.user.id) });
 }
 
 export async function POST(request: Request) {
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     url,
     fingerprintId,
     pHash,
+    userId: auth.user.id,
   });
 
   return jsonOk({ asset }, { status: 201 });

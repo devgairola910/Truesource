@@ -72,6 +72,7 @@ export type CreateAssetInput = {
   url?: string;
   fingerprintId?: string | null;
   pHash?: string | null;
+  userId: string;
 };
 
 export type CreateWhitelistInput = {

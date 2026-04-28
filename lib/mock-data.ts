@@ -11,6 +11,7 @@ export type AssetRecord = {
   url?: string;
   fingerprintId?: string | null;
   pHash?: string | null;
+  userId?: string;
 };
 
 export type CandidateRecord = {
