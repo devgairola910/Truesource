@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getSession, onAuthChange, clearSession } from "@/lib/auth-client";
+import { useFirebaseAuth } from "@/lib/hooks/use-firebase-auth";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { ToastProvider } from "@/components/ui/toast";
@@ -26,7 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-
+    if (!session && !firebaseLoading) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [session, firebaseLoading, pathname, router]);
