@@ -122,13 +122,14 @@ export async function getUserById(id: string) {
   return query.docs[0].data() as AuthUser;
 }
 
-export async function listAssets() {
-  const snapshot = await db.collection(ASSETS_COL).orderBy("id", "desc").get();
+export async function listAssets(userId: string) {
+  const snapshot = await db.collection(ASSETS_COL).where("userId", "==", userId).get();
   if (snapshot.empty) {
     // If empty in cloud, fallback to local seeds if needed (for initial dev)
     return seedAssets;
   }
-  return snapshot.docs.map(doc => doc.data());
+  const assets = snapshot.docs.map(doc => doc.data() as any);
+  return assets.sort((a, b) => b.id.localeCompare(a.id));
 }
 
 export async function addAsset(input: CreateAssetInput) {
@@ -144,6 +145,7 @@ export async function addAsset(input: CreateAssetInput) {
     pHash: input.pHash ?? null,
     status: (input.fingerprintId || input.pHash) ? "protected" : ("fingerprinting" as const),
     lastUpdated: "just now",
+    userId: input.userId,
   };
 
   await db.collection(ASSETS_COL).doc(id).set(asset);

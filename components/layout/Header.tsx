@@ -10,6 +10,28 @@ export function Header() {
   const pathname = usePathname();
   const session = useSyncExternalStore(onAuthChange, getSession, () => null);
 
+  React.useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    let isMounted = true;
+
+    Promise.all([
+      import("@/lib/firebase"),
+      import("firebase/auth")
+    ]).then(([{ auth }, { onAuthStateChanged }]) => {
+      if (!isMounted) return;
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (!firebaseUser && getSession()) {
+          clearSession();
+        }
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
   const navLinks = [
     { href: "/", label: "Solutions" },
     { href: "/pricing", label: "Verification" },
