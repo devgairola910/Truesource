@@ -221,10 +221,11 @@ export async function listKpis() {
   return snapshot.docs.map(doc => doc.data());
 }
 
-export async function createDashboardSnapshot(): Promise<DashboardSnapshot> {
+export async function createDashboardSnapshot(userId?: string): Promise<any> {
   const alerts = await listAlerts();
   const whitelist = await listWhitelistDomains();
   const candidates = await listCandidates();
+  const assets = userId ? await listAssets(userId) : [];
 
   const openAlerts = alerts.filter((alert: any) => alert.status === "new").length;
   const confirmedToday = alerts.filter(
@@ -241,7 +242,13 @@ export async function createDashboardSnapshot(): Promise<DashboardSnapshot> {
         value: String(candidates.length),
       },
     ],
+    assetStats: {
+      total: assets.length,
+      images: assets.filter(a => a.kind === "image").length,
+      videos: assets.filter(a => a.kind === "video").length,
+    },
     recentAlerts: alerts.slice(0, 5) as any[],
+    recentAssets: assets.slice(0, 4) as any[],
   };
 }
 

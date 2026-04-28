@@ -38,11 +38,11 @@ export function AppShell({ children }: AppShellProps) {
       <main
         className={cn(
           "pt-16 min-h-screen transition-all duration-300",
-          "lg:pl-64",
+          "lg:pl-[260px]",
           collapsed && "lg:pl-[70px]"
         )}
       >
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-6">
+        <div className="px-8 py-6 pb-24 lg:pb-8">
           {children}
         </div>
       </main>

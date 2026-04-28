@@ -34,8 +34,8 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 left-0 z-40 flex h-16 items-center border-b border-[var(--stroke)] bg-[var(--surface-2)]/80 backdrop-blur-xl px-6 gap-4 transition-all duration-300",
-        sidebarCollapsed ? "lg:left-[70px]" : "lg:left-64"
+        "fixed top-0 right-0 left-0 z-40 flex h-16 items-center border-b border-[var(--stroke)] bg-[var(--surface-2)]/80 backdrop-blur-xl px-8 gap-4 transition-all duration-300",
+        sidebarCollapsed ? "lg:left-[70px]" : "lg:left-[260px]"
       )}
     >
       {/* Mobile menu button */}
@@ -50,10 +50,10 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
       {/* Search */}
       <div className="flex-1 max-w-xl">
         <div className={cn(
-          "relative flex items-center rounded-xl border bg-[var(--surface-1)] transition-all",
+          "relative flex items-center rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] transition-all",
           searchFocused ? "border-[var(--brand)] shadow-[0_0_0_3px_rgba(99,102,241,0.1)]" : "border-transparent"
         )}>
-          <svg className="absolute left-3 text-[var(--text-soft)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-soft)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input
             type="text"
             placeholder="Search assets, incidents, scans…"
@@ -68,7 +68,7 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
 
 
         {/* Notifications */}
@@ -89,9 +89,9 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
             className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-[var(--surface-1)]"
           >
             <Avatar name={session?.name ?? "User"} size="sm" />
-            <div className="hidden md:block text-left">
+            <div className="hidden md:flex flex-col justify-center text-left">
               <p className="text-xs font-semibold text-[var(--text-strong)] leading-tight">{session?.name ?? "User"}</p>
-              <p className="text-[10px] text-[var(--text-soft)]">{session?.company ?? "Workspace"}</p>
+              <p className="text-[10px] text-[var(--text-soft)] leading-none mt-0.5">{session?.company ?? "Workspace"}</p>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-[var(--text-soft)] hidden md:block"><path d="m6 9 6 6 6-6"/></svg>
           </button>

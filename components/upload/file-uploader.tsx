@@ -13,6 +13,7 @@ import {
   UploadFileItem,
   getMediaType,
   uploadFileToAPI,
+  MAX_FILE_SIZE_LABEL,
 } from "@/lib/upload";
 
 export type FileUploaderProps = {
@@ -171,7 +172,7 @@ export function FileUploader({ onFilesChange, maxFiles = 10 }: FileUploaderProps
           Drop files here or click to browse
         </p>
         <p className="text-xs text-[var(--text-soft)] mt-1">
-          {ACCEPTED_EXTENSIONS_LABEL} · Max 2 GB per file
+          {ACCEPTED_EXTENSIONS_LABEL} · {MAX_FILE_SIZE_LABEL} file size
         </p>
       </div>
 

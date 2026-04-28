@@ -13,7 +13,7 @@ export default function ScansPage() {
           <p className="text-sm text-[var(--text-muted)] mt-1">Web scanning history and results</p>
         </div>
         <Link href="/dashboard/scans/leak-check">
-          <Button>Deep Match Leak Check</Button>
+          <Button>Deep Scan</Button>
         </Link>
       </div>
 

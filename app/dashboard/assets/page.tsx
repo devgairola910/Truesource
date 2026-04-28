@@ -91,9 +91,9 @@ export default function AssetsPage() {
           <p className="text-sm text-[var(--text-muted)] mt-1">{assets.length} synchronized assets</p>
         </div>
         <Link href="/dashboard/assets/upload">
-          <Button>
+          <Button className="transition-all hover:scale-[1.02]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload Assets
+            <span className="text-xs font-black uppercase tracking-widest">Upload Assets</span>
           </Button>
         </Link>
       </div>
@@ -156,8 +156,7 @@ export default function AssetsPage() {
         <EmptyState
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>}
           title="No assets found"
-          description="Try adjusting your filters or upload your first asset."
-          action={<Link href="/dashboard/assets/upload"><Button size="sm">Upload Asset</Button></Link>}
+          description="Try adjusting your filters or search terms."
         />
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
