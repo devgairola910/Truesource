@@ -191,13 +191,9 @@ export default function LeakCheckPage() {
                         <span className="text-sm text-[var(--text-muted)]">Title</span>
                         <span className="text-sm font-medium">{result.match.title}</span>
                       </div>
-                      <div className="flex items-center justify-between py-2 border-b border-[var(--stroke)]/50">
-                        <span className="text-sm text-[var(--text-muted)]">Distribution</span>
-                        <span className="text-sm font-medium">{result.match.distributedTo}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <span className="text-sm text-[var(--text-muted)]">Status</span>
-                        <Badge variant="success">Protected</Badge>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--text-muted)]">Perceptual Hash</span>
+                        <span className="text-xs font-mono text-[var(--text-soft)]">{result.details.generatedPHash.slice(0, 16)}...</span>
                       </div>
                     </div>
 
@@ -222,6 +218,14 @@ export default function LeakCheckPage() {
                         {result.details.generatedPHash}
                       </span>
                     </div>
+                    {result.details.assetsSearched !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--text-muted)]">Registry Coverage</span>
+                        <span className="text-xs font-bold text-[var(--text-soft)]">
+                          {result.details.assetsSearched} assets checked
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

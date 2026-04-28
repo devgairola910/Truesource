@@ -21,7 +21,7 @@ export default function UploadPage() {
   const [step, setStep] = useState<UploadStep>("files");
   const [files, setFiles] = useState<UploadFileItem[]>([]);
   const [title, setTitle] = useState("");
-  const [owner, setOwner] = useState("Apex Sports Media");
+  const [owner, setOwner] = useState("");
   const [distribution, setDistribution] = useState("");
   const [watermark, setWatermark] = useState(true);
   const [fingerprint, setFingerprint] = useState(true);
@@ -44,7 +44,7 @@ export default function UploadPage() {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-
+            "Authorization": `Bearer ${session?.idToken || ""}`
           },
           body: JSON.stringify({
             title: title || fileItem.name,
@@ -124,7 +124,7 @@ export default function UploadPage() {
           <div className="space-y-5">
             <label className="block space-y-1.5 text-sm font-medium text-[var(--text-muted)]">
               Asset Title
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Matchday Promo — Season 2025" className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1" />
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1" />
             </label>
             <label className="block space-y-1.5 text-sm font-medium text-[var(--text-muted)]">
               Rights Owner
@@ -132,11 +132,11 @@ export default function UploadPage() {
             </label>
             <label className="block space-y-1.5 text-sm font-medium text-[var(--text-muted)]">
               Distribution Channels
-              <input type="text" value={distribution} onChange={(e) => setDistribution(e.target.value)} placeholder="e.g. Instagram, X, Broadcast" className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1" />
+              <input type="text" value={distribution} onChange={(e) => setDistribution(e.target.value)} className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1" />
             </label>
             <label className="block space-y-1.5 text-sm font-medium text-[var(--text-muted)]">
               Description
-              <textarea rows={3} placeholder="Optional description or notes…" className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1 resize-none" />
+              <textarea rows={3} className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--text-strong)] input-focus-ring mt-1 resize-none" />
             </label>
           </div>
         )}
@@ -147,8 +147,6 @@ export default function UploadPage() {
             {[
               { label: "Perceptual Fingerprinting", desc: "Generate resilient hashes for matching against altered copies", checked: fingerprint, onChange: () => setFingerprint(!fingerprint) },
               { label: "Invisible Watermark", desc: "Embed hidden provenance signals for stronger attribution", checked: watermark, onChange: () => setWatermark(!watermark) },
-              { label: "Shot-Level Indexing", desc: "Segment video into individual shots for clip-level matching", checked: true, onChange: () => {} },
-              { label: "Logo Detection", desc: "Detect and index visible brand cues for evidence", checked: true, onChange: () => {} },
             ].map((opt) => (
               <label key={opt.label} className="flex items-start gap-3 rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-4 cursor-pointer hover:bg-[var(--surface-2)] transition">
                 <input type="checkbox" checked={opt.checked} onChange={opt.onChange} className="mt-0.5 h-4 w-4 rounded border-[var(--stroke)] accent-[var(--brand)]" />

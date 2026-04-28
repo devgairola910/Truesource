@@ -63,13 +63,19 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!match) {
-      // Fetch all assets for the user to perform Hamming distance search
-      const snapshot = await db.collection(ASSETS_COL)
-        .where("userId", "==", auth.user.id)
-        .get();
+    let assetsSearched = 0;
 
-      snapshot.docs.forEach((doc) => {
+    if (!match) {
+      // Fetch assets for the user OR assets with no userId (legacy assets)
+      const [userSnapshot, legacySnapshot] = await Promise.all([
+        db.collection(ASSETS_COL).where("userId", "==", auth.user.id).get(),
+        db.collection(ASSETS_COL).where("userId", "==", null).get()
+      ]);
+      
+      const allDocs = [...userSnapshot.docs, ...legacySnapshot.docs];
+      assetsSearched = allDocs.length;
+
+      allDocs.forEach((doc) => {
         const asset = doc.data();
         if (asset.pHash) {
           const distance = getHammingDistance(pHash, asset.pHash);
@@ -111,6 +117,7 @@ export async function POST(request: Request) {
       details: {
         extractedFingerprint: fingerprintId,
         generatedPHash: pHash,
+        assetsSearched: assetsSearched,
       }
     });
 
