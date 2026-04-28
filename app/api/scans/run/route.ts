@@ -10,6 +10,9 @@ import type { AlertRecord } from "@/lib/types";
  * triggered via Cloud Scheduler (e.g., every 6 hours).
  * It crawls targeted platforms and compares media against the protected asset registry.
  */
+
+export const maxDuration = 60; // Extend Vercel timeout to 60s (Pro plan)
+
 export async function POST(request: Request) {
   const auth = await requireAuth(request);
   if (!auth.ok) return auth.response;
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
   let candidates: { url: string, domain: string, title: string }[] = [];
   try {
     console.log("Autonomous Scan: Fetching candidates from Reddit...");
-    const redditRes = await fetch("https://www.reddit.com/r/pics/new.json?limit=15", {
+    const redditRes = await fetch("https://www.reddit.com/r/pics/new.json?limit=8", { // Reduced limit for Vercel stability
       headers: { 
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Truesource/1.0",
         "Accept": "application/json"
