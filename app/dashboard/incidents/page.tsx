@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatPercent } from "@/lib/utils";
 import type { AlertRecord } from "@/lib/mock-data";
-import { getSession } from "@/lib/auth-client";
+import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useSyncExternalStore } from "react";
 
 const savedViews = [
   { id: "all", label: "All Incidents" },
@@ -18,6 +19,7 @@ const savedViews = [
 ];
 
 export default function IncidentsPage() {
+  const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -27,11 +29,11 @@ export default function IncidentsPage() {
 
   useEffect(() => {
     async function fetchAlerts() {
-      const session = getSession();
+      if (!session?.idToken) return;
       try {
         const res = await fetch("/api/alerts", {
           headers: {
-            "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+            "Authorization": `Bearer ${session.idToken}`
           }
         });
         const data = await res.json();
@@ -43,7 +45,7 @@ export default function IncidentsPage() {
       }
     }
     fetchAlerts();
-  }, []);
+  }, [session?.idToken]);
 
   const filtered = useMemo(() => {
     return alerts.filter((a) => {

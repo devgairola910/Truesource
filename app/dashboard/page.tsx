@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPercent } from "@/lib/utils";
 import type { AlertRecord, KpiRecord } from "@/lib/mock-data";
-import { getSession } from "@/lib/auth-client";
+import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useSyncExternalStore } from "react";
 
 const trendIcon = {
   up: "↑",
@@ -18,6 +19,7 @@ const trendIcon = {
 const chartData = [42, 58, 35, 72, 65, 88, 76, 54, 91, 68, 82, 95, 78, 63, 87, 71, 93, 84, 67, 79, 96, 85, 74, 89];
 
 export default function DashboardPage() {
+  const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const [activeChart, setActiveChart] = useState<"detections" | "scans">("detections");
   const [kpis, setKpis] = useState<KpiRecord[]>([]);
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
@@ -27,9 +29,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const session = getSession();
+      if (!session?.idToken) return;
       const headers = {
-        "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+        "Authorization": `Bearer ${session.idToken}`
       };
 
       try {
@@ -51,7 +53,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, []);
+  }, [session?.idToken]);
 
   const recentActivity = alerts.slice(0, 6).map((alert, i) => ({
     id: alert.id,

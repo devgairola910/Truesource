@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getSession } from "@/lib/auth-client";
+import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useSyncExternalStore } from "react";
 
 export default function LeakCheckPage() {
+  const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const [file, setFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -29,13 +31,11 @@ export default function LeakCheckPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const session = getSession();
-
     try {
       const res = await fetch("/api/scans", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+          "Authorization": `Bearer ${session?.idToken || ""}`
         },
         body: formData,
       });

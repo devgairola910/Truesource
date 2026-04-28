@@ -1,20 +1,28 @@
 import { useState, useEffect } from "react";
 import { 
   User, 
-  onAuthStateChanged,
+  onIdTokenChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut
 } from "firebase/auth";
 import { auth } from "../firebase";
+import { getSession, setSession } from "../auth-client";
 
 export function useFirebaseAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken();
+        const session = getSession();
+        if (session && session.idToken !== idToken) {
+          setSession({ ...session, idToken });
+        }
+      }
       setLoading(false);
     });
 

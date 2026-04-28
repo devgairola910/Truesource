@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useFirebaseAuth } from "@/lib/hooks/use-firebase-auth";
 import { AppShell } from "@/components/layout/app-shell";
 import { ToastProvider } from "@/components/ui/toast";
 
@@ -10,12 +11,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const session = useSyncExternalStore(onAuthChange, getSession, () => null);
+  const { loading: firebaseLoading } = useFirebaseAuth(); // Mount the hook to listen to onIdTokenChanged
 
   useEffect(() => {
-    if (!session) {
+    if (!session && !firebaseLoading) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [session, pathname, router]);
+  }, [session, firebaseLoading, pathname, router]);
 
   if (!session) {
     return (

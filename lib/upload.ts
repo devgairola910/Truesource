@@ -230,7 +230,7 @@ async function uploadViaDirectPost(
     }
 
     xhr.open("POST", "/api/upload");
-    const token = session?.idToken || session?.sessionToken;
+    const token = session?.idToken;
     if (token) {
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     }
@@ -255,7 +255,7 @@ async function uploadViaSignedUrl(
       { 
         signal,
         headers: {
-          "Authorization": `Bearer ${session?.sessionToken || ""}`
+          "Authorization": `Bearer ${session?.idToken || ""}`
         }
       }
     );

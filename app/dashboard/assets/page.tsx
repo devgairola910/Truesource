@@ -8,11 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import type { AssetRecord } from "@/lib/mock-data";
-import { getSession } from "@/lib/auth-client";
+import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useSyncExternalStore } from "react";
 
 type ViewMode = "grid" | "list";
 
 export default function AssetsPage() {
+  const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const [assets, setAssets] = useState<AssetRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -23,11 +25,11 @@ export default function AssetsPage() {
 
   useEffect(() => {
     async function fetchAssets() {
-      const session = getSession();
+      if (!session?.idToken) return;
       try {
         const res = await fetch("/api/assets", {
           headers: {
-            "Authorization": `Bearer ${session?.idToken || session?.sessionToken || ""}`
+            "Authorization": `Bearer ${session.idToken}`
           }
         });
         const data = await res.json();
@@ -39,7 +41,7 @@ export default function AssetsPage() {
       }
     }
     fetchAssets();
-  }, []);
+  }, [session?.idToken]);
 
   const filtered = useMemo(() => {
     return assets.filter((a) => {
