@@ -5,6 +5,22 @@ import { requireAuth } from "@/lib/backend/http";
 
 const ASSETS_COL = "assets";
 
+function getHammingDistance(hex1: string, hex2: string): number {
+  if (!hex1 || !hex2) return 64;
+  let xor;
+  try {
+    xor = BigInt("0x" + hex1) ^ BigInt("0x" + hex2);
+  } catch {
+    return 64;
+  }
+  let distance = 0;
+  while (xor > 0n) {
+    distance += Number(xor & 1n);
+    xor >>= 1n;
+  }
+  return distance;
+}
+
 export async function POST(request: Request) {
   const auth = await requireAuth(request);
   if (!auth.ok) {
@@ -46,20 +62,31 @@ export async function POST(request: Request) {
     }
 
     if (!match) {
-      // Try exact pHash match
+      // Fetch all assets for the user to perform Hamming distance search
       const snapshot = await db.collection(ASSETS_COL)
-        .where("pHash", "==", pHash)
-        .limit(1)
+        .where("userId", "==", auth.user.id)
         .get();
       
-      if (!snapshot.empty) {
-        match = snapshot.docs[0].data();
-        console.log(`Scan: Matched by exact pHash: ${match.id}`);
+      let bestMatch = null;
+      let lowestDistance = 64;
+      const MATCH_THRESHOLD = 12; // Allow up to 12 bits difference for crops/modifications
+
+      snapshot.docs.forEach((doc) => {
+        const asset = doc.data();
+        if (asset.pHash) {
+          const distance = getHammingDistance(pHash, asset.pHash);
+          if (distance <= MATCH_THRESHOLD && distance < lowestDistance) {
+            lowestDistance = distance;
+            bestMatch = asset;
+          }
+        }
+      });
+
+      if (bestMatch) {
+        match = bestMatch;
+        console.log(`Scan: Matched by fuzzy pHash (distance: ${lowestDistance}): ${match.id}`);
       }
     }
-
-    // TODO: Implement Hamming distance search for more robust pHash matching
-    // (Requires fetching all hashes or using a specialized DB)
 
     return NextResponse.json({
       success: true,
