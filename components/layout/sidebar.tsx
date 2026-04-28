@@ -77,7 +77,7 @@ export function Sidebar({ collapsed, onToggle, className }: SidebarProps) {
       className={cn(
         "fixed left-0 top-0 bottom-0 z-50 flex flex-col border-r border-[var(--stroke)] bg-[var(--surface-2)]",
         "transition-all duration-300 ease-in-out",
-        collapsed ? "w-[70px]" : "w-64",
+        collapsed ? "w-[70px]" : "w-[260px]",
         className
       )}
     >
@@ -119,7 +119,7 @@ export function Sidebar({ collapsed, onToggle, className }: SidebarProps) {
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                       active
                         ? "bg-[var(--brand-surface)] text-[var(--brand)]"
-                        : "text-[var(--text-muted)] hover:bg-[var(--surface-1)] hover:text-[var(--text-strong)]",
+                        : "text-[var(--text-muted)] hover:bg-[var(--brand-surface)]/50 hover:text-[var(--brand)]",
                       collapsed && "justify-center px-0"
                     )}
                     title={collapsed ? item.label : undefined}

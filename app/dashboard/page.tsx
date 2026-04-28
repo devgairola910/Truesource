@@ -21,8 +21,7 @@ const chartData = [42, 58, 35, 72, 65, 88, 76, 54, 91, 68, 82, 95, 78, 63, 87, 7
 export default function DashboardPage() {
   const session = useSyncExternalStore(onAuthChange, getSession, () => null);
   const [activeChart, setActiveChart] = useState<"detections" | "scans">("detections");
-  const [kpis, setKpis] = useState<KpiRecord[]>([]);
-  const [alerts, setAlerts] = useState<AlertRecord[]>([]);
+  const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const maxChart = Math.max(...chartData);
@@ -35,16 +34,9 @@ export default function DashboardPage() {
       };
 
       try {
-        const [kpiRes, dashboardRes] = await Promise.all([
-          fetch("/api/kpis", { headers }),
-          fetch("/api/dashboard", { headers })
-        ]);
-        
-        const kpiData = await kpiRes.json();
-        const dashboardData = await dashboardRes.json();
-
-        setKpis(kpiData.kpis || []);
-        setAlerts(dashboardData.snapshot?.recentAlerts || []);
+        const response = await fetch("/api/dashboard", { headers });
+        const resData = await response.json();
+        setData(resData.snapshot);
       } catch (error) {
         console.error("Dashboard synchronization failure:", error);
       } finally {
@@ -55,14 +47,7 @@ export default function DashboardPage() {
     fetchData();
   }, [session?.idToken]);
 
-  const recentActivity = alerts.slice(0, 6).map((alert, i) => ({
-    id: alert.id,
-    text: alert.title,
-    time: alert.detectedAt,
-    type: alert.severity === "critical" ? "danger" : alert.severity === "high" ? "warning" : "info"
-  }));
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center h-12">
@@ -80,177 +65,167 @@ export default function DashboardPage() {
     );
   }
 
+  const alerts: AlertRecord[] = data.recentAlerts || [];
+  const metrics = data.metrics || [];
+  const assetStats = data.assetStats || { total: 0, images: 0, videos: 0 };
+  const recentAssets = data.recentAssets || [];
+
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-strong)] tracking-tight">Dashboard</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Operational status synchronized with backend</p>
+    <div className="space-y-8 pb-12">
+      {/* Welcome Section */}
+      <section className="reveal-up space-y-2">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-[var(--text-strong)] tracking-tight">
+            Welcome back, {session?.name?.split(' ')[0] || 'User'}
+          </h1>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--success-surface)] border border-[var(--success)]/20">
+            <div className="h-1.5 w-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--success)]">Live Protection Active</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/assets/upload">
-            <Button size="sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-              Upload Asset
-            </Button>
-          </Link>
-        </div>
-      </div>
+        <p className="text-[var(--text-muted)] max-w-2xl">
+          Here's a tactical overview of your protected assets and recent global detections.
+        </p>
+      </section>
 
-      {/* KPI Cards */}
+      {/* Quick Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.length > 0 ? (
-          kpis.map((kpi, i) => (
-            <div
-              key={kpi.id}
-              className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 space-y-3 shadow-sm hover:shadow-md transition-shadow"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)]">{kpi.label}</p>
-                <span className={cn(
-                  "text-xs font-black",
-                  kpi.trend === "up" ? "text-[var(--success)]" : kpi.trend === "down" ? "text-[var(--danger)]" : "text-[var(--text-soft)]"
-                )}>
-                  {trendIcon[kpi.trend]}
-                </span>
-              </div>
-              <p className="text-3xl font-bold text-[var(--text-strong)] tracking-tighter">{kpi.value}</p>
-              <div className="flex items-center justify-between text-[10px] font-bold text-[var(--text-soft)] uppercase tracking-wider">
-                <span>Target: {kpi.target}</span>
-              </div>
-              <div className="flex items-end gap-0.5 h-8">
-                {[35, 42, 38, 55, 48, 62, 58, 70, 65, 78, 72, 85].map((v, j) => (
-                  <div key={j} className="flex-1 rounded-sm bg-[var(--brand)]" style={{ height: `${(v / 85) * 100}%`, opacity: 0.2 + (j / 12) * 0.8 }} />
-                ))}
+        {metrics.map((m: any, i: number) => (
+          <div
+            key={m.label}
+            className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 space-y-2 shadow-sm hover:shadow-md transition-all group"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)] group-hover:text-[var(--brand)] transition-colors">{m.label}</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-[var(--text-strong)] tracking-tighter">{m.value}</p>
+            </div>
+            <div className="pt-2">
+              <div className="h-1 w-full bg-[var(--stroke)] rounded-full overflow-hidden">
+                <div className="h-full bg-[var(--brand)] rounded-full" style={{ width: '65%', opacity: 0.6 }} />
               </div>
             </div>
-          ))
-        ) : (
-          [...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-5 flex flex-col justify-center items-center text-center opacity-40">
-              <div className="h-2 w-24 bg-[var(--stroke)] rounded mb-3" />
-              <div className="h-8 w-16 bg-[var(--stroke)] rounded mb-3" />
-              <div className="h-2 w-20 bg-[var(--stroke)] rounded" />
-            </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
 
-      {/* Chart + Activity */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        {/* Detection chart */}
-        <div className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-strong)]">Detection Activity</h2>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-soft)] mt-1 text-indigo-500/80">Real-time scan telemetry</p>
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
+        <div className="space-y-6">
+          {/* Main Chart Card */}
+          <div className="reveal-up rounded-3xl border border-[var(--stroke)] bg-[var(--surface-2)] p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-strong)]">Detection Telemetry</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-soft)] mt-1">Global signal matches across indexed domains</p>
+              </div>
+              <div className="flex rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-1">
+                <button className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg bg-[var(--surface-2)] text-[var(--brand)] shadow-sm">24H View</button>
+                <button className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg text-[var(--text-muted)] hover:text-[var(--text-strong)] transition">7D View</button>
+              </div>
             </div>
-            <div className="flex rounded-xl border border-[var(--stroke)] bg-[var(--surface-1)] p-1">
-              {(["detections", "scans"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveChart(tab)}
-                  className={cn(
-                    "px-4 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg transition",
-                    activeChart === tab ? "bg-[var(--surface-2)] text-[var(--brand)] shadow-sm" : "text-[var(--text-muted)]"
-                  )}
-                >
-                  {tab}
-                </button>
+            <div className="flex items-end gap-1.5 h-64">
+              {chartData.map((val, i) => (
+                <div key={i} className="flex-1 group relative flex flex-col items-center">
+                  <div
+                    className="w-full rounded-t-lg bg-gradient-to-t from-[var(--brand)] to-indigo-400 opacity-80 transition-all duration-300 hover:opacity-100 hover:scale-x-110"
+                    style={{ height: `${(val / maxChart) * 100}%` }}
+                  />
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--surface-3)] text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition shadow-xl pointer-events-none">
+                    {val}
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-          <div className="flex items-end gap-1.5 h-64">
-            {chartData.map((val, i) => (
-              <div key={i} className="flex-1 group relative flex flex-col items-center">
-                <div
-                  className="w-full rounded-t-lg bg-gradient-to-t from-[var(--brand)] to-indigo-400 opacity-80 transition-all duration-300 hover:opacity-100 hover:scale-x-110"
-                  style={{ height: `${(val / maxChart) * 100}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between mt-4 text-[9px] font-black uppercase tracking-widest text-[var(--text-soft)]">
-            <span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>Live</span>
-          </div>
-        </div>
-
-        {/* Recent activity */}
-        <div className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 shadow-sm">
-          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-strong)] mb-6">Recent Activity</h2>
-          <div className="space-y-2 flex-1 flex flex-col">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 rounded-xl px-4 py-3 border border-transparent hover:border-[var(--stroke)] hover:bg-[var(--surface-1)] transition-all group">
-                  <div className={cn(
-                    "mt-1.5 h-2 w-2 rounded-full shrink-0 shadow-[0_0_8px_currentColor]",
-                    item.type === "danger" ? "text-[var(--danger)] bg-current" :
-                    item.type === "warning" ? "text-[var(--warning)] bg-current" : "text-[var(--brand)] bg-current"
-                  )} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[var(--text-strong)] leading-relaxed">{item.text}</p>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-soft)] mt-1.5 opacity-60 group-hover:opacity-100">{item.time}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 opacity-30">
-                <div className="text-2xl mb-2">⚡</div>
-                <p className="text-[10px] font-black uppercase tracking-widest">No Recent Signals</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Review queue */}
-      <div className="reveal-up rounded-2xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-strong)]">Tactical Review Queue</h2>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-soft)] mt-1">{alerts.filter(a => a.status === "new").length} High-priority nodes pending</p>
-          </div>
-          <Link href="/dashboard/incidents">
-            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-[var(--brand)]">View Full Feed →</Button>
-          </Link>
-        </div>
-        <div className="space-y-3">
-          {alerts.filter(a => a.status === "new").length > 0 ? (
-            alerts.filter(a => a.status === "new").slice(0, 3).map((alert) => (
-              <Link
-                key={alert.id}
-                href={`/dashboard/incidents/${alert.id}`}
-                className="flex items-center gap-6 rounded-2xl border border-[var(--stroke)] bg-[var(--surface-1)] p-5 hover:bg-[var(--surface-2)] hover:border-[var(--brand)]/20 transition-all group"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)]">{alert.id}</span>
-                    <Badge variant={alert.severity === "critical" ? "danger" : alert.severity === "high" ? "warning" : "default"} className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest">
-                      {alert.severity}
-                    </Badge>
-                  </div>
-                  <p className="text-sm font-bold text-[var(--text-strong)] group-hover:text-[var(--brand)] transition truncate leading-relaxed">{alert.title}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="h-1 w-1 rounded-full bg-[var(--text-soft)]" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-soft)] opacity-80">{alert.sourceDomain} · {alert.detectedAt}</p>
-                  </div>
-                </div>
-                <div className="hidden sm:flex flex-col items-end gap-1.5 shrink-0 px-6 border-x border-[var(--stroke)]">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--text-soft)]">Signal Lock</p>
-                  <p className="text-lg font-black text-[var(--text-strong)] tracking-tighter">{formatPercent(alert.evidence[0].score)}</p>
-                </div>
-                <div className="h-10 w-10 rounded-full border border-[var(--stroke)] flex items-center justify-center text-[var(--text-soft)] group-hover:text-[var(--brand)] group-hover:border-[var(--brand)]/20 transition-all">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="rounded-2xl border border-[var(--stroke)] border-dashed p-12 text-center">
-              <p className="text-sm text-[var(--text-muted)] font-medium">Review queue clear. No high-priority incidents detected.</p>
+            <div className="flex justify-between mt-6 text-[9px] font-black uppercase tracking-widest text-[var(--text-soft)]">
+              <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span className="text-[var(--brand)]">Live Now</span>
             </div>
-          )}
+          </div>
+
+          {/* Recently Synced Assets */}
+          <div className="reveal-up space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-strong)]">Recently Synced</h2>
+              <Link href="/dashboard/assets" className="text-[10px] font-black uppercase tracking-widest text-[var(--brand)] hover:underline">View All</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {recentAssets.slice(0, 4).map((asset: any) => (
+                <Link key={asset.id} href={`/dashboard/assets/${asset.id}`} className="group relative aspect-square rounded-2xl border border-[var(--stroke)] bg-[var(--surface-1)] overflow-hidden transition-all hover:border-[var(--brand)]">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
+                    <span className="text-2xl">{asset.kind === 'video' ? '🎬' : '🖼️'}</span>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/20 to-transparent">
+                    <p className="text-[9px] font-bold text-white truncate">{asset.title}</p>
+                  </div>
+                </Link>
+              ))}
+              {recentAssets.length === 0 && (
+                <div className="col-span-2 py-8 text-center rounded-2xl border border-dashed border-[var(--stroke)]">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)]">No recent assets</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="reveal-up rounded-3xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 space-y-4">
+            <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-strong)]">Tactical Actions</h2>
+            <div className="grid grid-cols-1 gap-2">
+              <Link href="/dashboard/assets/upload">
+                <Button className="w-full justify-start gap-3 h-12 rounded-xl transition-all hover:scale-[1.01]">
+                  <span className="text-lg">📁</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Register New Asset</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/scans/leak-check">
+                <Button variant="secondary" className="w-full justify-start gap-3 h-12 rounded-xl transition-all hover:scale-[1.01]">
+                  <span className="text-lg">🔍</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Instant Leak Check</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Recent Alerts Feed */}
+          <div className="reveal-up rounded-3xl border border-[var(--stroke)] bg-[var(--surface-2)] p-6 space-y-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-strong)]">Critical Signals</h2>
+              <Badge variant="danger" className="text-[9px] font-black uppercase tracking-widest">{alerts.length}</Badge>
+            </div>
+            <div className="space-y-2">
+              {alerts.length > 0 ? (
+                alerts.map((item) => (
+                  <Link key={item.id} href={`/dashboard/incidents/${item.id}`} className="flex items-start gap-4 rounded-2xl px-4 py-4 border border-transparent hover:border-[var(--stroke)] hover:bg-[var(--surface-1)] transition-all group">
+                    <div className={cn(
+                      "mt-1 h-2 w-2 rounded-full shrink-0 shadow-[0_0_8px_currentColor]",
+                      item.severity === "critical" ? "text-[var(--danger)] bg-current" :
+                      item.severity === "high" ? "text-[var(--warning)] bg-current" : "text-[var(--brand)] bg-current"
+                    )} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-[var(--text-strong)] leading-tight group-hover:text-[var(--brand)] transition-colors">{item.title}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-soft)]">{item.sourceDomain}</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-soft)] opacity-40">·</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-soft)]">{item.detectedAt}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="py-12 text-center opacity-30">
+                  <p className="text-[10px] font-black uppercase tracking-widest">All signals clear</p>
+                </div>
+              )}
+            </div>
+            <Link href="/dashboard/incidents" className="block">
+              <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)] hover:text-[var(--brand)]">
+                Full Incident Log →
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

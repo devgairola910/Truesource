@@ -42,8 +42,8 @@ export const ACCEPT_STRING = ACCEPTED_TYPES.join(",");
 export const ACCEPTED_EXTENSIONS_LABEL = "JPG, PNG, WebP, GIF, MP4, MOV, WebM";
 
 // ─── Size limits ────────────────────────────────────────────────────
-export const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
-export const MAX_FILE_SIZE_LABEL = "2 GB";
+export const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // 50 GB
+export const MAX_FILE_SIZE_LABEL = "Unlimited";
 export const MAX_FILES = 20;
 
 // ─── Validation ─────────────────────────────────────────────────────
@@ -172,9 +172,9 @@ export async function uploadFileToAPI(
   onProgress: (pct: number) => void,
   signal?: AbortSignal
 ): Promise<{ assetId: string; fileName: string; url?: string }> {
-  // Use direct POST for files under 15MB. 
-  // This bypasses CORS issues with signed URLs for most common media.
-  const isLarge = file.size > 15 * 1024 * 1024; // 15MB
+  // Use direct POST only for tiny files (under 1MB).
+  // Everything else goes via Signed URL to bypass server limits and ensure reliability.
+  const isLarge = file.size > 1 * 1024 * 1024; // 1MB
 
   if (isLarge) {
     return uploadViaSignedUrl(file, onProgress, signal);

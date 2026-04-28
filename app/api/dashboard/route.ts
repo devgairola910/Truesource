@@ -7,5 +7,5 @@ export async function GET(request: Request) {
     return auth.response;
   }
 
-  return jsonOk({ snapshot: await createDashboardSnapshot() });
+  return jsonOk({ snapshot: await createDashboardSnapshot(auth.user.id) });
 }
