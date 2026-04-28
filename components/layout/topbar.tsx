@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getSession, clearSession } from "@/lib/auth-client";
 import { Modal } from "@/components/ui/modal";
 import { FileUploader } from "@/components/upload/file-uploader";
+import { useFirebaseAuth } from "@/lib/hooks/use-firebase-auth";
 
 type TopbarProps = {
   sidebarCollapsed: boolean;
@@ -14,10 +15,22 @@ type TopbarProps = {
 };
 
 export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
+  const { logout } = useFirebaseAuth();
   const session = getSession();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      clearSession();
+      window.location.replace("/login");
+    }
+  };
 
   return (
     <header
@@ -109,7 +122,7 @@ export function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
                 </Link>
                 <div className="border-t border-[var(--stroke)] mt-1 pt-1">
                   <button
-                    onClick={() => { clearSession(); window.location.href = "/login"; }}
+                    onClick={handleSignOut}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--danger)] hover:bg-[var(--danger-surface)] transition rounded-b-lg"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
