@@ -143,17 +143,31 @@ export default function LeakCheckPage() {
                   result.found ? "bg-[var(--success-surface)] border-[var(--success)]/20" : "bg-[var(--danger-surface)] border-[var(--danger)]/20"
                 )}>
                   <div className={cn(
-                    "h-12 w-12 rounded-full flex items-center justify-center text-xl",
+                    "h-12 w-12 rounded-full flex items-center justify-center text-xl flex-shrink-0",
                     result.found ? "bg-[var(--success)] text-white" : "bg-[var(--danger)] text-white"
                   )}>
                     {result.found ? "✓" : "!"}
                   </div>
-                  <div>
-                    <p className={cn("font-bold text-lg", result.found ? "text-[var(--success)]" : "text-[var(--danger)]")}>
-                      {result.found ? "Official Media Matched" : "No Match Found"}
-                    </p>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {result.found ? "This media was originated from Truesource registry." : "This media does not contain a recognized fingerprint."}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className={cn("font-bold text-lg", result.found ? "text-[var(--success)]" : "text-[var(--danger)]")}>
+                        {result.found ? (result.matchPercentage >= 100 ? "Official Media Matched (Exact)" : `Official Media Matched (${result.matchPercentage}% Similar)`) : "No Match Found"}
+                      </p>
+                      {result.matchPercentage !== undefined && (
+                        <Badge 
+                          variant={result.found ? "success" : "secondary"} 
+                          className={cn(
+                            result.found ? "bg-[var(--success)] text-white border-transparent" : "bg-[var(--surface-3)] text-[var(--text-soft)]"
+                          )}
+                        >
+                          {result.matchPercentage}% Similar
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      {result.found 
+                        ? (result.matchPercentage >= 100 ? "This media contains an identical fingerprint or hash from the TrueSource registry." : "This media is visually similar to an asset in the TrueSource registry.") 
+                        : (result.matchPercentage > 0 ? `The closest match in your registry is only ${result.matchPercentage}% similar, which is below the matching threshold.` : "This media does not sufficiently match any recognized fingerprint or visual hash.")}
                     </p>
                   </div>
                 </div>

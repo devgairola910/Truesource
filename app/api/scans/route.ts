@@ -69,29 +69,46 @@ export async function POST(request: Request) {
       
       let bestMatch = null;
       let lowestDistance = 64;
-      const MATCH_THRESHOLD = 12; // Allow up to 12 bits difference for crops/modifications
 
       snapshot.docs.forEach((doc) => {
         const asset = doc.data();
         if (asset.pHash) {
           const distance = getHammingDistance(pHash, asset.pHash);
-          if (distance <= MATCH_THRESHOLD && distance < lowestDistance) {
+          if (distance < lowestDistance) {
             lowestDistance = distance;
             bestMatch = asset;
           }
         }
       });
 
-      if (bestMatch) {
+      const matchPercentage = Math.round(((64 - lowestDistance) / 64) * 100);
+
+      if (bestMatch && matchPercentage > 65) {
         match = bestMatch;
-        console.log(`Scan: Matched by fuzzy pHash (distance: ${lowestDistance}): ${match.id}`);
+        console.log(`Scan: Matched by fuzzy pHash (distance: ${lowestDistance}, ${matchPercentage}%): ${match.id}`);
       }
+    }
+
+    // Determine the final percentage to return
+    let finalPercentage = 0;
+    if (match) {
+      if (fingerprintId) {
+        finalPercentage = 100; // Exact fingerprint match is 100%
+      } else {
+        // Find distance for the match we found
+        const dist = getHammingDistance(pHash, match.pHash);
+        finalPercentage = Math.round(((64 - dist) / 64) * 100);
+      }
+    } else if (bestMatch) {
+      // Even if it didn't pass the >65% threshold, return the highest similarity found
+      finalPercentage = Math.round(((64 - lowestDistance) / 64) * 100);
     }
 
     return NextResponse.json({
       success: true,
       found: !!match,
       match: match || null,
+      matchPercentage: finalPercentage,
       details: {
         extractedFingerprint: fingerprintId,
         generatedPHash: pHash,
