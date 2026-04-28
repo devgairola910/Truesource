@@ -46,7 +46,9 @@ export async function POST(request: Request) {
     const pHash = await generatePerceptualHash(buffer);
     console.log(`Scan: Generated pHash: ${pHash}`);
 
-    let match = null;
+    let match: any = null;
+    let bestMatch: any = null;
+    let lowestDistance = 64;
 
     // Search in Firestore
     if (fingerprintId) {
@@ -66,9 +68,6 @@ export async function POST(request: Request) {
       const snapshot = await db.collection(ASSETS_COL)
         .where("userId", "==", auth.user.id)
         .get();
-      
-      let bestMatch = null;
-      let lowestDistance = 64;
 
       snapshot.docs.forEach((doc) => {
         const asset = doc.data();
