@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FileUploader } from "@/components/upload/file-uploader";
 import { UploadFileItem } from "@/lib/upload";
-import { getSession } from "@/lib/auth-client";
-
+import { getSession, onAuthChange } from "@/lib/auth-client";
+import { useSyncExternalStore } from "react";
 type UploadStep = "files" | "metadata" | "protection" | "review";
 const steps: { id: UploadStep; label: string }[] = [
   { id: "files", label: "Select Files" },
@@ -28,22 +28,14 @@ export default function UploadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  const session = useSyncExternalStore(onAuthChange, getSession, () => null);
+
   const currentIndex = steps.findIndex((s) => s.id === step);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const session = getSession();
-      let token = session?.idToken || session?.sessionToken;
-      try {
-        const { auth } = await import("@/lib/firebase");
-        if (auth.currentUser) {
-          token = await auth.currentUser.getIdToken(true);
-        }
-      } catch (e) {
-        console.warn("Failed to get fresh Firebase token", e);
-      }
-      
+
       // Register each file as an asset
       for (const fileItem of files) {
         if (fileItem.status !== "done") continue;
@@ -52,7 +44,7 @@ export default function UploadPage() {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token || ""}`
+
           },
           body: JSON.stringify({
             title: title || fileItem.name,

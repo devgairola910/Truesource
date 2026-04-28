@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getSession, onAuthChange, clearSession } from "@/lib/auth-client";
+
 import { AppShell } from "@/components/layout/app-shell";
 import { ToastProvider } from "@/components/ui/toast";
 import { auth } from "@/lib/firebase";
@@ -12,8 +13,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const session = useSyncExternalStore(onAuthChange, getSession, () => null);
+  const { loading: firebaseLoading } = useFirebaseAuth(); // Mount the hook to listen to onIdTokenChanged
 
   useEffect(() => {
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser && getSession()) {
         clearSession();
@@ -23,10 +26,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (!session) {
+
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [session, pathname, router]);
+  }, [session, firebaseLoading, pathname, router]);
 
   if (!session) {
     return (
