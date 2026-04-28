@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs } from "@/components/ui/tabs";
 import { cn, formatPercent } from "@/lib/utils";
-import { alerts } from "@/lib/mock-data";
-import type { AlertStatus } from "@/lib/mock-data";
+import type { AlertStatus, AlertRecord } from "@/lib/mock-data";
 
 const auditTrail = [
   { action: "Incident created", user: "System", time: "3 min ago", detail: "Auto-generated from scan run #847" },
@@ -20,17 +19,44 @@ const auditTrail = [
 export default function IncidentDetailPage() {
   const params = useParams();
   const alertId = params.id as string;
-  const alert = alerts.find((a) => a.id === alertId) ?? alerts[0];
-  const [status, setStatus] = useState<AlertStatus>(alert.status);
+  const [alert, setAlert] = useState<AlertRecord | null>(null);
+  const [status, setStatus] = useState<AlertStatus | null>(null);
   const [tab, setTab] = useState("evidence");
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState<{ text: string; time: string; user: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAlert() {
+      try {
+        const response = await fetch(`/api/alerts/${alertId}`);
+        const data = await response.json();
+        if (data.alert) {
+          setAlert(data.alert);
+          setStatus(data.alert.status);
+        }
+      } catch (error) {
+        console.error("Failed to fetch alert", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAlert();
+  }, [alertId]);
 
   const addNote = () => {
     if (!note.trim()) return;
     setNotes([{ text: note, time: "just now", user: "You" }, ...notes]);
     setNote("");
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-[var(--text-soft)] animate-pulse">Loading incident details...</div>;
+  }
+
+  if (!alert) {
+    return <div className="p-8 text-center text-[var(--text-soft)]">Incident not found.</div>;
+  }
 
   return (
     <div className="space-y-6">

@@ -26,26 +26,50 @@ export default function DashboardPage() {
 
   const maxChart = Math.max(...chartData);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!session?.idToken) return;
-      const headers = {
-        "Authorization": `Bearer ${session.idToken}`
-      };
+  const fetchData = async () => {
+    if (!session?.idToken) return;
+    const headers = {
+      "Authorization": `Bearer ${session.idToken}`
+    };
 
-      try {
-        const response = await fetch("/api/dashboard", { headers });
-        const resData = await response.json();
-        setData(resData.snapshot);
-      } catch (error) {
-        console.error("Dashboard synchronization failure:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      const response = await fetch("/api/dashboard", { headers });
+      const resData = await response.json();
+      setData(resData.snapshot);
+    } catch (error) {
+      console.error("Dashboard synchronization failure:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [session?.idToken]);
+
+  const [isScanningInternet, setIsScanningInternet] = useState(false);
+
+  const runAutonomousScan = async () => {
+    if (!session?.idToken) return;
+    setIsScanningInternet(true);
+    try {
+      const res = await fetch("/api/scans/run", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.idToken}` }
+      });
+      const result = await res.json();
+      alert(`${result.message}\nCandidates Scanned: ${result.scannedCandidates}\nNew Incidents Found: ${result.matches}`);
+      if (result.matches > 0) {
+        // Refresh dashboard data to show new alerts
+        await fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to run autonomous scan.");
+    } finally {
+      setIsScanningInternet(false);
+    }
+  };
 
   if (isLoading || !data) {
     return (
@@ -186,6 +210,17 @@ export default function DashboardPage() {
                   <span className="text-xs font-black uppercase tracking-widest">Instant Leak Check</span>
                 </Button>
               </Link>
+              <Button 
+                variant="secondary" 
+                className="w-full justify-start gap-3 h-12 rounded-xl transition-all hover:scale-[1.01] bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] border-none"
+                onClick={runAutonomousScan}
+                disabled={isScanningInternet}
+              >
+                <span className="text-lg">{isScanningInternet ? "⏳" : "🌐"}</span>
+                <span className="text-xs font-black uppercase tracking-widest">
+                  {isScanningInternet ? "Scanning Web..." : "Run Autonomous Web Scan"}
+                </span>
+              </Button>
             </div>
           </div>
 

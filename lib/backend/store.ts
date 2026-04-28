@@ -6,6 +6,7 @@ import {
   candidates as seedCandidates,
   kpis as seedKpis,
   whitelistDomains as seedWhitelist,
+  type AlertRecord,
 } from "@/lib/mock-data";
 import type {
   AuthUser,
@@ -161,6 +162,29 @@ export async function listAlerts() {
   const snapshot = await db.collection(ALERTS_COL).orderBy("id", "desc").get();
   if (snapshot.empty) return [];
   return snapshot.docs.map(doc => doc.data());
+}
+
+export async function getAlertById(alertId: string) {
+  const doc = await db.collection(ALERTS_COL).doc(alertId).get();
+  if (!doc.exists) return undefined;
+  return doc.data();
+}
+
+export async function createAlert(input: Omit<AlertRecord, "id" | "detectedAt">) {
+  const id = `INC-${Math.floor(Math.random() * 900000) + 100000}`;
+  const alert: AlertRecord = {
+    ...input,
+    id,
+    detectedAt: new Date().toISOString(),
+  };
+  await db.collection(ALERTS_COL).doc(id).set(alert);
+  return alert;
+}
+
+export async function getAllAssets() {
+  const snapshot = await db.collection(ASSETS_COL).get();
+  if (snapshot.empty) return [];
+  return snapshot.docs.map(doc => doc.data() as any);
 }
 
 export async function updateAlertStatus(alertId: string, input: UpdateAlertStatusInput) {
