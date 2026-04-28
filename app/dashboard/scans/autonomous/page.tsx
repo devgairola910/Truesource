@@ -75,7 +75,7 @@ export default function AutonomousScanPage() {
           setResults({ scanned: data.scannedCandidates, matches: 0 });
         }
       } else {
-        addLog("Scan failed: " + (data.error || "Unknown error"), "error");
+        addLog("Scan failed: " + (data.message || data.error || "Unknown error"), "error");
       }
     } catch (error) {
       addLog("Network error occurred during scan.", "error");

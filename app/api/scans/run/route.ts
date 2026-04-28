@@ -26,11 +26,27 @@ export async function POST(request: Request) {
   // For this real implementation, we use Reddit's public API as our "suspect feed"
   let candidates: { url: string, domain: string, title: string }[] = [];
   try {
-    const redditRes = await fetch("https://www.reddit.com/r/pics/new.json?limit=10", {
-      headers: { "User-Agent": "Truesource-Autonomous-Scanner/1.0" }
+    console.log("Autonomous Scan: Fetching candidates from Reddit...");
+    const redditRes = await fetch("https://www.reddit.com/r/pics/new.json?limit=15", {
+      headers: { 
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Truesource/1.0",
+        "Accept": "application/json"
+      },
+      next: { revalidate: 0 }
     });
+
+    if (!redditRes.ok) {
+      const errorText = await redditRes.text();
+      console.error(`Reddit API failed with status ${redditRes.status}:`, errorText);
+      throw new Error(`Reddit API returned ${redditRes.status}`);
+    }
+
     const redditData = await redditRes.json();
     
+    if (!redditData?.data?.children) {
+      throw new Error("Invalid Reddit API response structure");
+    }
+
     candidates = redditData.data.children
       .map((child: any) => ({
         url: child.data.url,
@@ -38,12 +54,15 @@ export async function POST(request: Request) {
         title: child.data.title
       }))
       .filter((c: any) => {
+        if (!c.url) return false;
         const u = c.url.toLowerCase();
         return u.endsWith(".jpg") || u.endsWith(".jpeg") || u.endsWith(".png");
       });
-  } catch (error) {
+      
+    console.log(`Autonomous Scan: Found ${candidates.length} candidate images.`);
+  } catch (error: any) {
     console.error("Crawler failed:", error);
-    return jsonError("Crawler failed to fetch candidate stream.", 500);
+    return jsonError(`Crawler failed: ${error.message || "Unknown error during fetch"}`, 500);
   }
 
   let matchCount = 0;
@@ -52,7 +71,9 @@ export async function POST(request: Request) {
   for (const candidate of candidates) {
     try {
       // Download the suspected media
-      const imgRes = await fetch(candidate.url);
+      const imgRes = await fetch(candidate.url, {
+        headers: { "User-Agent": "Truesource-Scanner/1.0" }
+      });
       if (!imgRes.ok) continue;
       const arrayBuffer = await imgRes.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -100,6 +121,7 @@ export async function POST(request: Request) {
 
   return jsonOk({ 
     message: "Autonomous scan completed.", 
+    feedSource: "Reddit r/pics",
     scannedCandidates: candidates.length,
     matches: matchCount 
   });
