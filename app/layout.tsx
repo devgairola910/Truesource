@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LastVisitedTracker } from "@/components/auth/last-visited-tracker";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { LayoutShell } from "@/components/layout/layout-shell";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <LastVisitedTracker />
         <LayoutShell>{children}</LayoutShell>
+        <Analytics />
       </body>
     </html>
   );
